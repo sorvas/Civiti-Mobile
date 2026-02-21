@@ -1,0 +1,4754 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Civiti API",
+    "description": "## Overview\nThe Civiti API powers a civic engagement platform that enables Romanian citizens to report local issues and coordinate email campaigns to pressure authorities for resolution.\n\n## Features\n- **User Authentication**: Secure registration and login via Supabase Auth\n- **Issue Reporting**: Create and track civic issues with photo uploads\n- **Email Campaigns**: Coordinate community pressure through email tracking\n- **Gamification**: Earn points, badges, and achievements for civic participation\n- **Admin Moderation**: Review and approve reported issues\n\n## Authentication\nThis API uses JWT Bearer authentication. Obtain a token through Supabase Auth and include it in the `Authorization` header:\n```\nAuthorization: Bearer YOUR_JWT_TOKEN\n```\n\n## Rate Limiting\n- Standard endpoints: 100 requests per minute\n- Issue creation: 10 requests per hour\n- File uploads: 5MB maximum file size\n\n## Response Codes\n- `200 OK`: Successful request\n- `201 Created`: Resource created successfully\n- `400 Bad Request`: Invalid request parameters\n- `401 Unauthorized`: Missing or invalid authentication\n- `403 Forbidden`: Insufficient permissions\n- `404 Not Found`: Resource not found\n- `429 Too Many Requests`: Rate limit exceeded\n- `500 Internal Server Error`: Server error",
+    "contact": {"name": "Civiti Support", "email": "support@civiti.ro"},
+    "license": {"name": "MIT License"},
+    "version": "v1"
+  },
+  "paths": {
+    "/api/activity": {
+      "get": {
+        "tags": ["Activity"],
+        "summary": "Get public recent activity feed",
+        "description": "Retrieves recent activity events for active, publicly visible issues. Includes new supporters, status changes, and approvals.",
+        "operationId": "GetRecentActivities",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Possible values: NewSupporters, StatusChange, IssueApproved, IssueResolved, IssueCreated, NewComment",
+            "schema": {"$ref": "#/components/schemas/ActivityType"}
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfActivityResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/my": {
+      "get": {
+        "tags": ["Activity"],
+        "summary": "Get activities for user's issues",
+        "description": "Retrieves activity events for issues owned by the authenticated user. Useful for tracking engagement on your reported issues.",
+        "operationId": "GetUserActivities",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Possible values: NewSupporters, StatusChange, IssueApproved, IssueResolved, IssueCreated, NewComment",
+            "schema": {"$ref": "#/components/schemas/ActivityType"}
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfActivityResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/actions": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get admin action audit log",
+        "operationId": "GetAdminActions",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32", "default": 1}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32", "default": 50}
+          },
+          {
+            "name": "issueId",
+            "in": "query",
+            "schema": {"type": "string", "format": "uuid"}
+          },
+          {
+            "name": "adminUserId",
+            "in": "query",
+            "schema": {"type": "string", "format": "uuid"}
+          },
+          {
+            "name": "actionType",
+            "in": "query",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {"type": "string", "default": "CreatedAt"}
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort in descending order (default: true)",
+            "schema": {"type": "boolean", "default": true}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfAdminActionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/bulk-approve": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Bulk approve multiple issues",
+        "operationId": "BulkApproveIssues",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/BulkApproveRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/BulkApproveResponse"}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/issues/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get detailed issue information for admin review",
+        "description": "Retrieves comprehensive issue details including user information, full content, photos, and moderation history. This provides all information needed for admins to make informed moderation decisions.",
+        "operationId": "GetIssueDetailsForAdmin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIssueDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/issues/{id}/approve": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Approve an issue",
+        "operationId": "ApproveIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/ApproveIssueRequest"},
+              "example": {
+                "adminNotes": "Issue verified and approved for public visibility. High priority due to safety concerns."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/issues/{id}/reject": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Reject an issue with reason",
+        "operationId": "RejectIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/RejectIssueRequest"},
+              "example": {
+                "reason": "Duplicate of existing issue #123. Please support the existing campaign instead.",
+                "internalNotes": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/issues/{id}/request-changes": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Request changes on an issue",
+        "operationId": "RequestChanges",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/RequestChangesRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueActionResponse"}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/moderation-stats": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get moderation statistics for the current admin",
+        "operationId": "GetModerationStats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetModerationStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/pending-issues": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get issues pending admin review",
+        "description": "Retrieves a paginated list of issues awaiting admin approval. Supports advanced filtering by category, urgency, date range, and search terms. This endpoint is critical for the moderation workflow and only accessible to administrators.",
+        "operationId": "GetPendingIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32", "default": 1}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32", "default": 20}
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by issue category",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "urgency",
+            "in": "query",
+            "description": "Filter by urgency level",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "submittedAfter",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "submittedBefore",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {"type": "string", "default": "CreatedAt"}
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort in descending order (default: true)",
+            "schema": {"type": "boolean", "default": true}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfAdminIssueResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/admin/statistics": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get admin dashboard statistics",
+        "operationId": "GetAdminStatistics",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {"type": "string", "default": "30d"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatisticsResponse"
+                },
+                "example": {
+                  "totalSubmissions": 156,
+                  "pendingReview": 12,
+                  "approved": 120,
+                  "rejected": 24,
+                  "active": 45,
+                  "resolved": 38,
+                  "cancelled": 8,
+                  "submissionsToday": 3,
+                  "submissionsThisWeek": 18,
+                  "submissionsThisMonth": 42,
+                  "reviewedToday": 5,
+                  "reviewedThisWeek": 28,
+                  "reviewedThisMonth": 95,
+                  "averageReviewTimeHours": 4.5,
+                  "issuesByCategory": {
+                    "Infrastructure" : 45,
+                    "StreetLighting" : 32,
+                    "GreenSpaces"    : 28,
+                    "PublicTransport": 25,
+                    "WasteManagement": 26
+                  },
+                  "issuesByUrgency": {
+                    "Low"   : 28,
+                    "Medium": 65,
+                    "High"  : 42,
+                    "Urgent": 21
+                  },
+                  "totalUsers": 1250,
+                  "activeUsersThisMonth": 380,
+                  "totalEmailsSent": 15670,
+                  "approvalRate": 83.3,
+                  "resolutionRate": 31.7,
+                  "backlogCount": 75,
+                  "period": "monthly",
+                  "generatedAt": "2026-02-21T12:39:33.8692451Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "Invalid authentication token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/auth/status": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Check authentication status",
+        "description": "Verifies that the current JWT token is valid and returns basic user identity information from the token claims. Use /api/user/profile to get the full user profile.",
+        "operationId": "GetAuthStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/AuthStatusResponse"},
+                "example": {
+                  "authenticated": true,
+                  "supabaseUserId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "email": "ion.popescu@example.com"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/authorities": {
+      "get": {
+        "tags": ["Authorities"],
+        "summary": "Get list of active authorities with optional filtering",
+        "description": "Retrieves active authorities that can be selected when creating an issue.\n\nFilter options:\n- city: Filter by city name (e.g., 'București', 'Cluj-Napoca')\n- district: Filter by district within city (e.g., 'Sector 1'). When specified with city, returns both district-specific and city-wide authorities.\n- search: Search by authority name (case-insensitive, partial match)\n\nThis is a public endpoint, no authentication required.",
+        "operationId": "GetAuthorities",
+        "parameters": [
+          { "name": "city", "in": "query", "schema": {"type": "string"} },
+          {
+            "name": "district",
+            "in": "query",
+            "description": "Filter by district",
+            "schema": {"type": "string"}
+          },
+          { "name": "search", "in": "query", "schema": {"type": "string"} }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorityListResponse"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authorities/{id}": {
+      "get": {
+        "tags": ["Authorities"],
+        "summary": "Get authority details by ID",
+        "description": "Retrieves detailed information about a specific authority.",
+        "operationId": "GetAuthorityById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/AuthorityResponse"}
+              }
+            }
+          },
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": ["Utility"],
+        "summary": "Get all issue categories with Romanian labels",
+        "description": "Returns all available issue categories with their English values and Romanian display labels.\n\nUse the 'value' field when submitting issues via the API.\nUse the 'label' field for displaying categories in the UI.\n\nThis is a public endpoint, no authentication required.",
+        "operationId": "GetCategories",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/CategoryResponse"}
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "get": {
+        "tags": ["Comments"],
+        "summary": "Get a single comment",
+        "description": "Retrieves a comment by its ID.",
+        "operationId": "GetComment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CommentResponse"},
+                "example": {
+                  "id": "5563da38-4b58-4254-ae99-077c10d40325",
+                  "issueId": "0d16a8e9-8e9b-44c9-b050-82458abfa8da",
+                  "content": "Am observat și eu această problemă. Este foarte periculoasă pentru pietoni.",
+                  "helpfulCount": 5,
+                  "isEdited": false,
+                  "isDeleted": false,
+                  "createdAt": "2026-02-21T10:39:33.8706019Z",
+                  "updatedAt": "2026-02-21T10:39:33.870603Z",
+                  "parentCommentId": null,
+                  "replyCount": 2,
+                  "user": {
+                    "id": "74a67ece-c8f9-47bb-af03-e0f76443e176",
+                    "displayName": "Maria Ionescu",
+                    "photoUrl": "https://storage.civiti.ro/avatars/user-456.jpg",
+                    "level": 3
+                  },
+                  "hasVoted": false
+                }
+              }
+            }
+          },
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Comments"],
+        "summary": "Update own comment",
+        "description": "Updates a comment. Only the comment author can update their comment.",
+        "operationId": "UpdateComment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UpdateCommentRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {"description": "No Content"},
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "delete": {
+        "tags": ["Comments"],
+        "summary": "Delete a comment",
+        "description": "Deletes a comment. The comment author or an admin can delete comments.",
+        "operationId": "DeleteComment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "204": {"description": "No Content"},
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/comments/{id}/vote": {
+      "post": {
+        "tags": ["Comments"],
+        "summary": "Vote a comment as helpful",
+        "description": "Marks a comment as helpful. Awards points to the comment author.",
+        "operationId": "VoteCommentHelpful",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CommentVoteResponse"}
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "delete": {
+        "tags": ["Comments"],
+        "summary": "Remove helpful vote from a comment",
+        "description": "Removes a previously cast helpful vote from a comment.",
+        "operationId": "RemoveCommentVote",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CommentVoteResponse"}
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/gamification/achievements": {
+      "get": {
+        "tags": ["Gamification"],
+        "summary": "Get all available achievements",
+        "operationId": "GetAllAchievements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/AchievementResponse"}
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gamification/achievements/user": {
+      "get": {
+        "tags": ["Gamification"],
+        "summary": "Get user's achievement progress",
+        "operationId": "GetUserAchievements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AchievementProgressResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/gamification/badges": {
+      "get": {
+        "tags": ["Gamification"],
+        "summary": "Get all available badges",
+        "description": "Retrieves a list of all badges available in the gamification system, including their requirements and point values.",
+        "operationId": "GetAllBadges",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/BadgeResponse"}
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gamification/badges/user": {
+      "get": {
+        "tags": ["Gamification"],
+        "summary": "Get all badges with user's earned status",
+        "operationId": "GetUserBadges",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/BadgeResponse"}
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/gamification/leaderboard": {
+      "get": {
+        "tags": ["Gamification"],
+        "summary": "Get gamification leaderboard",
+        "operationId": "GetGamificationLeaderboard",
+        "parameters": [
+          { "name": "period", "in": "query", "schema": {"type": "string"} },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by issue category",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {"type": "integer", "format": "int32"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/LeaderboardResponse"},
+                "example": {
+                  "leaderboard": [
+                    {
+                      "rank": 1,
+                      "user": {
+                        "id": "330aa1b2-d5d6-4e59-a8ee-3bb1bc3433d0",
+                        "displayName": "Ana Popa",
+                        "photoUrl": "https://storage.civiti.ro/avatars/user-456.jpg",
+                        "city": "București"
+                      },
+                      "points": 1250,
+                      "level": 5,
+                      "issuesReported": 32,
+                      "issuesResolved": 18,
+                      "recentBadges": [
+                        "Email Warrior",  "Community Hero", "Problem Solver"
+                      ]
+                    },
+                    {
+                      "rank": 2,
+                      "user": {
+                        "id": "f72ef335-7c74-437e-b2d3-cbf3d6f1e7d1",
+                        "displayName": "Mihai Ionescu",
+                        "photoUrl": "https://storage.civiti.ro/avatars/user-789.jpg",
+                        "city": "Cluj-Napoca"
+                      },
+                      "points": 1180,
+                      "level": 5,
+                      "issuesReported": 28,
+                      "issuesResolved": 15,
+                      "recentBadges": ["Active Citizen", "Weekly Champion"]
+                    },
+                    {
+                      "rank": 3,
+                      "user": {
+                        "id"         : "8a3ce4b1-f7be-4815-9cb8-7a87cb2102f7",
+                        "displayName": "Elena Dumitrescu",
+                        "photoUrl"   : null,
+                        "city"       : "Timișoara"
+                      },
+                      "points": 950,
+                      "level": 4,
+                      "issuesReported": 20,
+                      "issuesResolved": 12,
+                      "recentBadges": ["Rising Star"]
+                    }
+                  ],
+                  "period": "monthly",
+                  "category": "points",
+                  "totalEntries": 125,
+                  "generatedAt": "2026-02-21T12:39:33.8727409Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint with connectivity tests",
+        "description": "Performs health checks on critical dependencies including PostgreSQL database and Supabase authentication service. Returns detailed connectivity status for each component.",
+        "operationId": "HealthCheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/HealthCheckResponse"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues": {
+      "get": {
+        "tags": ["Issues"],
+        "summary": "Get paginated list of approved issues",
+        "description": "Retrieves a paginated list of civic issues. By default, returns only Active issues. Use the status filter to include Resolved issues. Supports filtering by category, urgency level, status, district, and address. Results can be sorted by date, popularity (email count), votes, or urgency. Only publicly visible issues are returned. If authenticated, includes HasVoted field indicating if the current user has voted on each issue.",
+        "operationId": "GetIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by issue category",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "urgency",
+            "in": "query",
+            "description": "Filter by urgency level",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by issue status",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "description": "Filter by district",
+            "schema": {"type": "string"}
+          },
+          { "name": "address", "in": "query", "schema": {"type": "string"} },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort in descending order (default: true)",
+            "schema": {"type": "boolean"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfIssueListResponse"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "edd2f0f5-162e-4d91-acac-d1351cd04051",
+                      "title": "Groapă periculoasă pe strada Mihai Eminescu",
+                      "description": "O groapă adâncă de aproximativ 50cm s-a format în asfalt...",
+                      "category": "infrastructure",
+                      "address": "Strada Mihai Eminescu, Nr. 45",
+                      "urgency": "high",
+                      "emailsSent": 245,
+                      "communityVotes": 0,
+                      "hasVoted": null,
+                      "createdAt": "2026-02-16T12:39:33.8761194Z",
+                      "mainPhotoUrl": "https://storage.civiti.ro/photos/issue-123-photo1.jpg",
+                      "district": null,
+                      "status": "active"
+                    }
+                  ],
+                  "totalItems": 0,
+                  "page": 1,
+                  "pageSize": 12,
+                  "totalPages": 4
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Issues"],
+        "summary": "Create a new issue (requires authentication) (Rate limited: 10 requests per hour)",
+        "description": "Creates a new civic issue report. The issue will be placed in pending status and requires admin approval before becoming publicly visible. Users earn gamification points for creating issues. Rate limited to 10 issues per hour per user to prevent spam.",
+        "operationId": "CreateIssue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/CreateIssueRequest"},
+              "example": {
+                "title": "Groapă periculoasă pe strada Mihai Eminescu",
+                "description": "O groapă adâncă de aproximativ 50cm s-a format în asfalt, reprezentând un pericol pentru vehicule și pietoni.",
+                "category": "infrastructure",
+                "address": "Strada Mihai Eminescu, Nr. 45",
+                "district": "Sector 2",
+                "authorities": [
+                  {
+                    "authorityId": "67d163a2-c99c-43c6-ae4e-057299fbe6a5",
+                    "customName" : null,
+                    "customEmail": null
+                  },
+                  {
+                    "authorityId": null,
+                    "customName" : "Primăria Sector 2",
+                    "customEmail": "primarie.sector2@pmb.ro"
+                  }
+                ],
+                "latitude": 44.4268,
+                "longitude": 26.1025,
+                "urgency": "high",
+                "desiredOutcome": null,
+                "communityImpact": null,
+                "photoUrls": [
+                  "https://storage.civiti.ro/photos/issue-123-photo1.jpg",
+                  "https://storage.civiti.ro/photos/issue-123-photo2.jpg"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CreateIssueResponse"}
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "429": {"description": "Too Many Requests"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/issues/{id}": {
+      "get": {
+        "tags": ["Issues"],
+        "summary": "Get issue details by ID",
+        "description": "Retrieves detailed information about a specific issue including full description, location data, photos, email tracking statistics, community votes, and related user information. If authenticated, includes HasVoted field indicating if the current user has voted on this issue. Returns 404 if the issue doesn't exist or hasn't been approved yet.",
+        "operationId": "GetIssueById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueDetailResponse"}
+              }
+            }
+          },
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/email-sent": {
+      "post": {
+        "tags": ["Issues"],
+        "summary": "Confirm that an email was sent about an issue (Rate limited: 10 requests per hour)",
+        "description": "Increments the email counter for this issue. This is a public endpoint (no authentication required) with rate limiting - each IP can only confirm once per issue per hour to prevent abuse.",
+        "operationId": "ConfirmEmailSent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {"description": "OK"},
+          "400": {"description": "Bad Request"},
+          "404": {"description": "Not Found"},
+          "429": {"description": "Too Many Requests"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/poster": {
+      "get": {
+        "tags": ["Issues"],
+        "summary": "Generate printable PDF poster with QR code",
+        "description": "Generates a printable A4 PDF poster featuring a QR code that links to the specified civic issue. The poster includes the Civiti branding, a large QR code, a Romanian call-to-action, and the issue title. Only available for publicly visible, active issues. No authentication required.",
+        "operationId": "GenerateIssuePoster",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "404": {"description": "Not Found"},
+          "200": {"description": "OK"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/vote": {
+      "post": {
+        "tags": ["Issues"],
+        "summary": "Vote for an issue (requires authentication) (Rate limited: 10 requests per hour)",
+        "description": "Registers a community upvote for the specified issue. Users can only vote once per issue and cannot vote on their own issues. Only active issues can be voted on. Awards points to the issue author.",
+        "operationId": "VoteForIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {"description": "OK"},
+          "400": {"description": "Bad Request"},
+          "404": {"description": "Not Found"},
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "delete": {
+        "tags": ["Issues"],
+        "summary": "Remove vote from an issue (requires authentication)",
+        "description": "Removes a previously registered community upvote from the specified issue. Deducts points from the issue author.",
+        "operationId": "RemoveVoteFromIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "responses": {
+          "200": {"description": "OK"},
+          "400": {"description": "Bad Request"},
+          "404": {"description": "Not Found"},
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/issues/{issueId}/comments": {
+      "get": {
+        "tags": ["Comments"],
+        "summary": "Get comments for an issue",
+        "description": "Retrieves paginated comments for a specific issue. Supports sorting by date or helpful count.",
+        "operationId": "GetIssueComments",
+        "parameters": [
+          {
+            "name": "issueId",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort in descending order (default: true)",
+            "schema": {"type": "boolean"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfCommentResponse"
+                }
+              }
+            }
+          },
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Comments"],
+        "summary": "Create a comment on an issue",
+        "description": "Creates a new comment on an active issue. Awards points to the user.",
+        "operationId": "CreateComment",
+        "parameters": [
+          {
+            "name": "issueId",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/CreateCommentRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CommentResponse"},
+                "example": {
+                  "id": "b4d21133-3cbd-44a5-b384-7a876e3198a5",
+                  "issueId": "fe4673f8-cb0e-4869-a1bf-50f789daf3ef",
+                  "content": "Am observat și eu această problemă. Este foarte periculoasă pentru pietoni.",
+                  "helpfulCount": 5,
+                  "isEdited": false,
+                  "isDeleted": false,
+                  "createdAt": "2026-02-21T10:39:33.879281Z",
+                  "updatedAt": "2026-02-21T10:39:33.8792818Z",
+                  "parentCommentId": null,
+                  "replyCount": 2,
+                  "user": {
+                    "id": "d0db5b2b-159c-4363-be3f-85556c4b02da",
+                    "displayName": "Maria Ionescu",
+                    "photoUrl": "https://storage.civiti.ro/avatars/user-456.jpg",
+                    "level": 3
+                  },
+                  "hasVoted": false
+                }
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "409": {"description": "Conflict"},
+          "429": {"description": "Too Many Requests"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/issues/enhance-text": {
+      "post": {
+        "tags": ["Issues"],
+        "summary": "Enhance civic issue text using AI (requires authentication) (Rate limited: 10 requests per hour)",
+        "description": "Uses Claude AI to improve the quality, clarity, and professionalism of civic issue descriptions while preserving all original information. Returns enhanced text in Romanian. If AI enhancement fails, returns the original text with a warning. Rate limited to 10 requests per user per minute.",
+        "operationId": "EnhanceText",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/EnhanceTextRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/EnhanceTextResponse"}
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "429": {"description": "Too Many Requests"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/jwks/cache/clear": {
+      "post": {
+        "tags": ["JWKS"],
+        "summary": "Clears JWKS cache",
+        "description": "Manually clear the JWKS cache to force refresh from Supabase (admin only)",
+        "operationId": "ClearJwksCache",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwksCacheClearResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/jwks/cache/refresh": {
+      "post": {
+        "tags": ["JWKS"],
+        "summary": "Refreshes JWKS cache",
+        "description": "Manually refresh the JWKS cache from Supabase (admin only)",
+        "operationId": "RefreshJwksCache",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwksCacheRefreshResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JwksErrorResponse"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/jwks/health": {
+      "get": {
+        "tags": ["JWKS"],
+        "summary": "Gets JWKS service health status",
+        "description": "Returns health status of the JWKS service including cache statistics and connectivity to Supabase JWKS endpoint",
+        "operationId": "GetJwksHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JwksHealthResponse"}
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JwksErrorResponse"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jwks/stats": {
+      "get": {
+        "tags": ["JWKS"],
+        "summary": "Gets detailed JWKS cache statistics",
+        "description": "Returns detailed cache statistics for monitoring JWKS performance (admin only)",
+        "operationId": "GetJwksStats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JwksStatsResponse"}
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/account": {
+      "delete": {
+        "tags": ["User"],
+        "summary": "Delete user account (soft delete)",
+        "operationId": "DeleteUserAccount",
+        "responses": {
+          "204": {"description": "No Content"},
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/gamification": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get user's gamification data",
+        "operationId": "GetUserGamification",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGamificationResponse"
+                },
+                "example": {
+                  "points": 350,
+                  "level": 3,
+                  "issuesReported": 12,
+                  "issuesResolved": 5,
+                  "communityVotes": 45,
+                  "currentLoginStreak": 7,
+                  "longestLoginStreak": 15,
+                  "recentBadges": [
+                    {
+                      "id": "078fe52f-e80f-4982-9fbd-fded0ac05fc6",
+                      "name": "First Issue",
+                      "description": "Created your first issue",
+                      "iconUrl": "https://storage.civiti.ro/badges/first-issue.svg",
+                      "category": "Participation",
+                      "rarity": "Common",
+                      "requirementDescription": "Report your first civic issue",
+                      "earnedAt": "2026-01-22T12:39:33.8811144Z",
+                      "isEarned": true,
+                      "nameRo": "",
+                      "descriptionRo": "",
+                      "categoryRo": "",
+                      "rarityRo": "",
+                      "requirementDescriptionRo": null
+                    },
+                    {
+                      "id": "a74d34e6-243f-4977-9457-39563bcec4da",
+                      "name": "Email Warrior",
+                      "description": "Sent 100 emails for civic causes",
+                      "iconUrl": "https://storage.civiti.ro/badges/email-warrior.svg",
+                      "category": "Engagement",
+                      "rarity": "Rare",
+                      "requirementDescription": "Send 100 emails through campaigns",
+                      "earnedAt": "2026-02-14T12:39:33.8811167Z",
+                      "isEarned": true,
+                      "nameRo": "",
+                      "descriptionRo": "",
+                      "categoryRo": "",
+                      "rarityRo": "",
+                      "requirementDescriptionRo": null
+                    }
+                  ],
+                  "activeAchievements": [
+                    {
+                      "id": "85e125dc-152c-42fc-b4be-3b1cb8a3052c",
+                      "title": "Campaign Starter",
+                      "description": "Start 10 email campaigns",
+                      "progress": 7,
+                      "maxProgress": 10,
+                      "rewardPoints": 50,
+                      "completed": false,
+                      "completedAt": null,
+                      "percentageComplete": 70,
+                      "titleRo": "",
+                      "descriptionRo": ""
+                    }
+                  ],
+                  "currentLevelPoints": 300,
+                  "nextLevelPoints": 500,
+                  "pointsToNextLevel": 150,
+                  "pointsInCurrentLevel": 50,
+                  "levelProgressPercentage": 25
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/issues": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get issues created by the authenticated user",
+        "operationId": "GetUserIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by issue status",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort in descending order (default: true)",
+            "schema": {"type": "boolean"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfIssueListResponse"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "c6c18d43-8eaa-483e-a319-60a600a9ba9c",
+                      "title": "Groapă periculoasă pe strada Mihai Eminescu",
+                      "description": "O groapă adâncă de aproximativ 50cm s-a format în asfalt...",
+                      "category": "infrastructure",
+                      "address": "Strada Mihai Eminescu, Nr. 45",
+                      "urgency": "high",
+                      "emailsSent": 245,
+                      "communityVotes": 0,
+                      "hasVoted": null,
+                      "createdAt": "2026-02-16T12:39:33.8812914Z",
+                      "mainPhotoUrl": "https://storage.civiti.ro/photos/issue-123-photo1.jpg",
+                      "district": null,
+                      "status": "active"
+                    }
+                  ],
+                  "totalItems": 0,
+                  "page": 1,
+                  "pageSize": 12,
+                  "totalPages": 4
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/issues/{id}": {
+      "put": {
+        "tags": ["User"],
+        "summary": "Update and resubmit an issue",
+        "description": "Allows the authenticated user to edit their own issue. Cannot edit Cancelled or Resolved issues. After editing, the issue status is set to 'UnderReview' for admin re-approval.",
+        "operationId": "UpdateUserIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UpdateIssueRequest"}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/IssueDetailResponse"}
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/issues/{id}/status": {
+      "put": {
+        "tags": ["User"],
+        "summary": "Update issue status",
+        "description": "Allows the authenticated user to change their issue's status. Users can set status to: Cancelled, Resolved. Cannot change status of already cancelled or resolved issues.",
+        "operationId": "UpdateUserIssueStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string", "format": "uuid"}
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {"description": "No Content"},
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/user/leaderboard": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get user leaderboard",
+        "operationId": "GetLeaderboard",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination (default: 1)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page (default: 12, max: 100)",
+            "schema": {"type": "integer", "format": "int32"}
+          },
+          { "name": "period", "in": "query", "schema": {"type": "string"} }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/LeaderboardResponse"},
+                "example": {
+                  "leaderboard": [
+                    {
+                      "rank": 1,
+                      "user": {
+                        "id": "9342e9b0-a49c-4f80-849f-41695311e5e9",
+                        "displayName": "Ana Popa",
+                        "photoUrl": "https://storage.civiti.ro/avatars/user-456.jpg",
+                        "city": "București"
+                      },
+                      "points": 1250,
+                      "level": 5,
+                      "issuesReported": 32,
+                      "issuesResolved": 18,
+                      "recentBadges": [
+                        "Email Warrior",  "Community Hero", "Problem Solver"
+                      ]
+                    },
+                    {
+                      "rank": 2,
+                      "user": {
+                        "id": "fd5da380-2838-4bdb-8bd7-3482585e14f1",
+                        "displayName": "Mihai Ionescu",
+                        "photoUrl": "https://storage.civiti.ro/avatars/user-789.jpg",
+                        "city": "Cluj-Napoca"
+                      },
+                      "points": 1180,
+                      "level": 5,
+                      "issuesReported": 28,
+                      "issuesResolved": 15,
+                      "recentBadges": ["Active Citizen", "Weekly Champion"]
+                    },
+                    {
+                      "rank": 3,
+                      "user": {
+                        "id"         : "bdb29a42-0e88-4c8b-a5da-bed70e52f18c",
+                        "displayName": "Elena Dumitrescu",
+                        "photoUrl"   : null,
+                        "city"       : "Timișoara"
+                      },
+                      "points": 950,
+                      "level": 4,
+                      "issuesReported": 20,
+                      "issuesResolved": 12,
+                      "recentBadges": ["Rising Star"]
+                    }
+                  ],
+                  "period": "monthly",
+                  "category": "points",
+                  "totalEntries": 125,
+                  "generatedAt": "2026-02-21T12:39:33.8820125Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/profile": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get user's complete profile",
+        "description": "Retrieves the complete profile for the authenticated user including personal information, gamification data (points, level, badges, achievements), and notification preferences. If no profile exists, one will be automatically created using data from the JWT token.",
+        "operationId": "GetUserProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/UserProfileResponse"},
+                "example": {
+                  "id": "95672a32-4430-46c9-8c90-86fcb2704fff",
+                  "email": "ion.popescu@example.com",
+                  "displayName": "Ion Popescu",
+                  "photoUrl": "https://storage.civiti.ro/avatars/user-123.jpg",
+                  "county": "București",
+                  "city": "București",
+                  "district": "Sector 1",
+                  "residenceType": "Apartment",
+                  "points": 150,
+                  "level": 2,
+                  "createdAt": "2026-01-22T12:39:33.8822735Z",
+                  "emailVerified": true,
+                  "issueUpdatesEnabled": true,
+                  "communityNewsEnabled": true,
+                  "monthlyDigestEnabled": false,
+                  "achievementsEnabled": true,
+                  "gamification": null
+                }
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "post": {
+        "tags": ["User"],
+        "summary": "Create or update user profile",
+        "description": "Creates a new user profile in the Civiti system after successful Supabase OAuth authentication, or updates an existing profile if one already exists. This endpoint is idempotent - calling it multiple times with the same data will not cause errors.",
+        "operationId": "CreateUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserProfileRequest"
+              },
+              "example": {
+                "displayName": "Ion Popescu",
+                "photoUrl": "https://storage.civiti.ro/avatars/user-123.jpg",
+                "county": "București",
+                "city": "București",
+                "district": "Sector 1",
+                "residenceType": "apartment",
+                "issueUpdatesEnabled": null,
+                "communityNewsEnabled": null,
+                "monthlyDigestEnabled": null,
+                "achievementsEnabled": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/UserProfileResponse"},
+                "example": {
+                  "id": "8702aba2-654b-42b2-89fc-7bc04e6829dc",
+                  "email": "ion.popescu@example.com",
+                  "displayName": "Ion Popescu",
+                  "photoUrl": "https://storage.civiti.ro/avatars/user-123.jpg",
+                  "county": "București",
+                  "city": "București",
+                  "district": "Sector 1",
+                  "residenceType": "Apartment",
+                  "points": 150,
+                  "level": 2,
+                  "createdAt": "2026-01-22T12:39:33.8827026Z",
+                  "emailVerified": true,
+                  "issueUpdatesEnabled": true,
+                  "communityNewsEnabled": true,
+                  "monthlyDigestEnabled": false,
+                  "achievementsEnabled": true,
+                  "gamification": null
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/UserProfileResponse"},
+                "example": {
+                  "id": "b7290553-c9a3-454b-9523-b18f344d99e4",
+                  "email": "ion.popescu@example.com",
+                  "displayName": "Ion Popescu",
+                  "photoUrl": "https://storage.civiti.ro/avatars/user-123.jpg",
+                  "county": "București",
+                  "city": "București",
+                  "district": "Sector 1",
+                  "residenceType": "Apartment",
+                  "points": 150,
+                  "level": 2,
+                  "createdAt": "2026-01-22T12:39:33.8827125Z",
+                  "emailVerified": true,
+                  "issueUpdatesEnabled": true,
+                  "communityNewsEnabled": true,
+                  "monthlyDigestEnabled": false,
+                  "achievementsEnabled": true,
+                  "gamification": null
+                }
+              }
+            }
+          },
+          "400": {"description": "Bad Request"},
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "put": {
+        "tags": ["User"],
+        "summary": "Update user's profile",
+        "description": "Updates the authenticated user's profile information. Only provided fields will be updated; null fields are ignored. Returns the complete updated profile with gamification data.",
+        "operationId": "UpdateUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/UserProfileResponse"},
+                "example": {
+                  "id": "db67ff45-3022-4de9-94c5-45b5bea2b2df",
+                  "email": "ion.popescu@example.com",
+                  "displayName": "Ion Popescu",
+                  "photoUrl": "https://storage.civiti.ro/avatars/user-123.jpg",
+                  "county": "București",
+                  "city": "București",
+                  "district": "Sector 1",
+                  "residenceType": "Apartment",
+                  "points": 150,
+                  "level": 2,
+                  "createdAt": "2026-01-22T12:39:33.8840209Z",
+                  "emailVerified": true,
+                  "issueUpdatesEnabled": true,
+                  "communityNewsEnabled": true,
+                  "monthlyDigestEnabled": false,
+                  "achievementsEnabled": true,
+                  "gamification": null
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "404": {"description": "Not Found"},
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type"   : "string",
+                      "example": "An unexpected error occurred"
+                    },
+                    "requestId": {"type": "string", "example": "abc123-def456"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AchievementProgressResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "title": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "progress": {"type": "integer", "format": "int32"},
+          "maxProgress": {"type": "integer", "format": "int32"},
+          "rewardPoints": {"type": "integer", "format": "int32"},
+          "completed": {"type": "boolean"},
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "percentageComplete": {"type": "number", "format": "double"},
+          "titleRo": {"type": "string", "nullable": true},
+          "descriptionRo": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "AchievementResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "title": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "maxProgress": {"type": "integer", "format": "int32"},
+          "rewardPoints": {"type": "integer", "format": "int32"},
+          "rewardBadge": {"$ref": "#/components/schemas/BadgeResponse"},
+          "achievementType": {"type": "string", "nullable": true},
+          "titleRo": {"type": "string", "nullable": true},
+          "descriptionRo": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "ActivityResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "type": {"$ref": "#/components/schemas/ActivityType"},
+          "issueId": {"type": "string", "format": "uuid"},
+          "issueTitle": {"type": "string", "nullable": true},
+          "message": {"type": "string", "nullable": true},
+          "aggregatedCount": {"type": "integer", "format": "int32"},
+          "actorDisplayName": {"type": "string", "nullable": true},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActivityType": {
+        "enum": [
+          "NewSupporters", "StatusChange",  "IssueApproved", "IssueResolved",
+          "IssueCreated",  "NewComment"
+        ],
+        "type": "string",
+        "description": "Possible values: NewSupporters, StatusChange, IssueApproved, IssueResolved, IssueCreated, NewComment",
+        "format": "int32"
+      },
+      "AdminActionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "issueId": {"type": "string", "format": "uuid"},
+          "issueTitle": {"type": "string", "nullable": true},
+          "adminUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "adminName": {"type": "string", "nullable": true},
+          "adminEmail": {"type": "string", "nullable": true},
+          "actionType": {"$ref": "#/components/schemas/AdminActionType"},
+          "notes": {"type": "string", "nullable": true},
+          "previousStatus": {"type": "string", "nullable": true},
+          "newStatus": {"type": "string", "nullable": true},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminActionType": {
+        "enum": ["Approve", "Reject", "RequestChanges"],
+        "type": "string",
+        "description": "Possible values: Approve, Reject, RequestChanges",
+        "format": "int32"
+      },
+      "AdminIssueDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique issue identifier",
+            "format"     : "uuid"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Full issue description",
+            "nullable": true
+          },
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "status": {"$ref": "#/components/schemas/IssueStatus"},
+          "address": {
+            "type": "string",
+            "description": "Street address of the issue",
+            "nullable": true
+          },
+          "latitude": {
+            "type"       : "number",
+            "description": "GPS latitude",
+            "format"     : "double"
+          },
+          "longitude": {
+            "type"       : "number",
+            "description": "GPS longitude",
+            "format"     : "double"
+          },
+          "district": {
+            "type": "string",
+            "description": "District or sector",
+            "nullable": true
+          },
+          "desiredOutcome": {
+            "type": "string",
+            "description": "What the reporter hopes to achieve",
+            "nullable": true
+          },
+          "communityImpact": {
+            "type": "string",
+            "description": "Description of the community impact",
+            "nullable": true
+          },
+          "adminNotes": {
+            "type": "string",
+            "description": "Admin notes from the review",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "Reason if the issue was rejected",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "string",
+            "description": "When the issue was reviewed",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reviewedBy": {
+            "type": "string",
+            "description": "Admin who reviewed the issue",
+            "nullable": true
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "When the issue was created",
+            "format"     : "date-time"
+          },
+          "updatedAt": {
+            "type"       : "string",
+            "description": "When the issue was last updated",
+            "format"     : "date-time"
+          },
+          "userId": {
+            "type"       : "string",
+            "description": "Internal ID of the reporting user",
+            "format"     : "uuid"
+          },
+          "userName": {
+            "type": "string",
+            "description": "Display name of the reporting user",
+            "nullable": true
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "Email of the reporting user",
+            "nullable": true
+          },
+          "userPhone": {
+            "type": "string",
+            "description": "Phone number of the reporting user",
+            "nullable": true
+          },
+          "userTotalIssues": {
+            "type"       : "integer",
+            "description": "Total issues reported by this user",
+            "format"     : "int32"
+          },
+          "userResolvedIssues": {
+            "type"       : "integer",
+            "description": "Resolved issues by this user",
+            "format"     : "int32"
+          },
+          "userPoints": {
+            "type"       : "integer",
+            "description": "Gamification points of this user",
+            "format"     : "int32"
+          },
+          "photos": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/AdminIssuePhotoResponse"},
+            "description": "Photos attached to the issue",
+            "nullable": true
+          },
+          "authorities": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssueAuthorityResponse"},
+            "description": "Authorities linked to the issue",
+            "nullable": true
+          },
+          "adminActions": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/AdminActionResponse"},
+            "description": "Admin moderation action history",
+            "nullable": true
+          },
+          "emailsSent": {
+            "type"       : "integer",
+            "description": "Total emails sent for this issue",
+            "format"     : "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Detailed issue information for admin review, including user history and moderation data"
+      },
+      "AdminIssuePhotoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Photo identifier",
+            "format"     : "uuid"
+          },
+          "url": {
+            "type": "string",
+            "description": "Full-size photo URL",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "description": "Thumbnail URL for list views",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the photo",
+            "nullable": true
+          },
+          "isPrimary": {
+            "type"       : "boolean",
+            "description": "Whether this is the primary/main photo"
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "File size in bytes",
+            "format": "int32",
+            "nullable": true
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "When the photo was uploaded",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Photo attached to an issue, as seen by admins"
+      },
+      "AdminIssueResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "title": {"type": "string", "nullable": true},
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "status": {"$ref": "#/components/schemas/IssueStatus"},
+          "address": {"type": "string", "nullable": true},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "photoCount": {"type": "integer", "format": "int32"},
+          "emailsSent": {"type": "integer", "format": "int32"},
+          "userName": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false,
+        "description": "Lightweight response for admin issue list views"
+      },
+      "AdminStatisticsResponse": {
+        "type": "object",
+        "properties": {
+          "totalSubmissions": {"type": "integer", "format": "int32"},
+          "pendingReview": {"type": "integer", "format": "int32"},
+          "approved": {"type": "integer", "format": "int32"},
+          "rejected": {"type": "integer", "format": "int32"},
+          "active": {"type": "integer", "format": "int32"},
+          "resolved": {"type": "integer", "format": "int32"},
+          "cancelled": {"type": "integer", "format": "int32"},
+          "submissionsToday": {"type": "integer", "format": "int32"},
+          "submissionsThisWeek": {"type": "integer", "format": "int32"},
+          "submissionsThisMonth": {"type": "integer", "format": "int32"},
+          "reviewedToday": {"type": "integer", "format": "int32"},
+          "reviewedThisWeek": {"type": "integer", "format": "int32"},
+          "reviewedThisMonth": {"type": "integer", "format": "int32"},
+          "averageReviewTimeHours": {"type": "number", "format": "double"},
+          "issuesByCategory": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "format": "int32"},
+            "nullable": true
+          },
+          "issuesByUrgency": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "format": "int32"},
+            "nullable": true
+          },
+          "totalUsers": {"type": "integer", "format": "int32"},
+          "activeUsersThisMonth": {"type": "integer", "format": "int32"},
+          "totalEmailsSent": {"type": "integer", "format": "int32"},
+          "approvalRate": {"type": "number", "format": "double"},
+          "resolutionRate": {"type": "number", "format": "double"},
+          "backlogCount": {"type": "integer", "format": "int32"},
+          "period": {"type": "string", "nullable": true},
+          "generatedAt": {"type": "string", "format": "date-time"}
+        },
+        "additionalProperties": false
+      },
+      "ApproveIssueRequest": {
+        "type": "object",
+        "properties": {
+          "adminNotes": {
+            "maxLength": 2000,
+            "type": "string",
+            "description": "Optional admin notes about the approval decision",
+            "nullable": true,
+            "example": "Issue verified and approved for public visibility."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to approve a submitted issue for public visibility"
+      },
+      "AuthStatusResponse": {
+        "type": "object",
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+            "description": "Whether the user is currently authenticated",
+            "example": true
+          },
+          "supabaseUserId": {
+            "type": "string",
+            "description": "The user's Supabase user ID from the JWT token",
+            "nullable": true,
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email address from the JWT token",
+            "nullable": true,
+            "example": "ion.popescu@example.com"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response returned by the authentication status endpoint"
+      },
+      "AuthorityListResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "name": {"type": "string", "nullable": true},
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "nullable": true
+          },
+          "city": {"type": "string", "nullable": true},
+          "district": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false,
+        "description": "Response model for authority in list views"
+      },
+      "AuthorityResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "name": {"type": "string", "nullable": true},
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "nullable": true
+          },
+          "county": {"type": "string", "nullable": true},
+          "city": {"type": "string", "nullable": true},
+          "district": {"type": "string", "nullable": true},
+          "isActive": {
+            "type"       : "boolean",
+            "description": "Whether the record is active"
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for authority details"
+      },
+      "BadgeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "name": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "iconUrl": {"type": "string", "nullable": true},
+          "category": {"type": "string", "nullable": true},
+          "rarity": {"type": "string", "nullable": true},
+          "requirementDescription": {"type": "string", "nullable": true},
+          "earnedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isEarned": {"type": "boolean"},
+          "nameRo": {"type": "string", "nullable": true},
+          "descriptionRo": {"type": "string", "nullable": true},
+          "categoryRo": {"type": "string", "nullable": true},
+          "rarityRo": {"type": "string", "nullable": true},
+          "requirementDescriptionRo": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "BulkApproveRequest": {
+        "required": ["issueIds"],
+        "type": "object",
+        "properties": {
+          "issueIds": {
+            "type": "array",
+            "items": {"type": "string", "format": "uuid"},
+            "description": "List of issue IDs to approve"
+          },
+          "adminNotes": {
+            "maxLength": 2000,
+            "type": "string",
+            "description": "Optional admin notes applied to all approved issues",
+            "nullable": true,
+            "example": "Batch approved after verification."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to approve multiple issues at once"
+      },
+      "BulkApproveResponse": {
+        "type": "object",
+        "properties": {
+          "totalRequested": {"type": "integer", "format": "int32"},
+          "successfullyApproved": {"type": "integer", "format": "int32"},
+          "failed": {"type": "integer", "format": "int32"},
+          "message": {"type": "string", "nullable": true},
+          "results": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/BulkApproveResult"},
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BulkApproveResult": {
+        "type": "object",
+        "properties": {
+          "issueId": {"type": "string",  "format": "uuid"                  },
+          "success": {"type": "boolean"                                    },
+          "message": {"type": "string",                    "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "English enum value for the category (used in API requests)",
+            "nullable": true,
+            "example": "Infrastructure"
+          },
+          "label": {
+            "type": "string",
+            "description": "Romanian display label for the category",
+            "nullable": true,
+            "example": "Infrastructură"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for issue categories with localized labels"
+      },
+      "CommentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "issueId": {"type": "string", "format": "uuid"},
+          "content": {"type": "string", "nullable": true},
+          "helpfulCount": {"type": "integer", "format": "int32"},
+          "isEdited": {"type": "boolean"},
+          "isDeleted": {
+            "type"       : "boolean",
+            "description": "Whether the record is soft-deleted"
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "updatedAt": {
+            "type"       : "string",
+            "description": "Last update timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "parentCommentId": {
+            "type": "string",
+            "description": "Parent comment ID for replies. Null for top-level comments.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "replyCount": {
+            "type"       : "integer",
+            "description": "Number of direct replies to this comment",
+            "format"     : "int32"
+          },
+          "user": {"$ref": "#/components/schemas/CommentUserResponse"},
+          "hasVoted": {
+            "type": "boolean",
+            "description": "Whether the current user has voted this comment as helpful"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Full comment response with user information and vote status"
+      },
+      "CommentUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "displayName": {"type": "string", "nullable": true},
+          "photoUrl": {"type": "string", "nullable": true},
+          "level": {
+            "type"       : "integer",
+            "description": "User level based on points",
+            "format"     : "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Nested user information for comment responses"
+      },
+      "CommentVoteResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Result message describing the action taken",
+            "nullable": true,
+            "example": "Vote recorded"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response returned when voting or removing a vote on a comment"
+      },
+      "CreateCommentRequest": {
+        "required": ["content"],
+        "type": "object",
+        "properties": {
+          "content": {"maxLength": 2000, "minLength": 1, "type": "string"},
+          "parentCommentId": {
+            "type": "string",
+            "description": "Optional parent comment ID for replies. Null for top-level comments.",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateIssueRequest": {
+        "required": [
+          "address",     "category",    "description", "district",
+          "latitude",    "longitude",   "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+            "description": "Brief, descriptive title of the issue (max 200 characters)",
+            "example": "Groapă periculoasă pe strada Mihai Eminescu"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+            "description": "Detailed description of the issue",
+            "example": "O groapă adâncă de aproximativ 50cm s-a format în asfalt, reprezentând un pericol pentru vehicule și pietoni."
+          },
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "address": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string",
+            "description": "Street address or location description",
+            "example": "Strada Mihai Eminescu, Nr. 45, Sector 2"
+          },
+          "district": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "District or sector name",
+            "example": "Sector 2"
+          },
+          "authorities": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssueAuthorityInput"},
+            "description": "Target authorities for this issue (predefined or custom)",
+            "nullable": true
+          },
+          "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": "number",
+            "description": "GPS latitude coordinate",
+            "format": "double",
+            "example": 44.4268
+          },
+          "longitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": "number",
+            "description": "GPS longitude coordinate",
+            "format": "double",
+            "example": 26.1025
+          },
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "desiredOutcome": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Desired outcome or solution",
+            "nullable": true,
+            "example": "Immediate repair of the road surface and proper drainage installation"
+          },
+          "communityImpact": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Impact on the community",
+            "nullable": true,
+            "example": "Affects approximately 500 residents daily, school children at risk"
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "URLs of uploaded photos (max 8 photos)",
+            "nullable": true,
+            "example": ["https://storage.civica.ro/photos/issue-123-photo1.jpg"]
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for creating a new civic issue"
+      },
+      "CreateIssueResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "The unique identifier of the newly created issue",
+            "format"     : "uuid",
+            "example"    : "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "status": {
+            "type": "string",
+            "description": "The initial status of the issue (typically \"Submitted\" pending admin review)",
+            "nullable": true,
+            "example": "Submitted"
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "UTC timestamp when the issue was created",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response returned after successfully creating a new issue"
+      },
+      "CreateUserProfileRequest": {
+        "required": ["displayName"],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "User's display name shown publicly",
+            "example": "Ion Popescu"
+          },
+          "photoUrl": {
+            "maxLength": 500,
+            "type": "string",
+            "description": "URL to the user's profile photo",
+            "format": "uri",
+            "nullable": true,
+            "example": "https://storage.civiti.ro/avatars/user-123.jpg"
+          },
+          "county": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "Romanian county (județ) of residence",
+            "nullable": true,
+            "example": "București"
+          },
+          "city": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "City of residence",
+            "nullable": true,
+            "example": "București"
+          },
+          "district": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "District or sector within the city",
+            "nullable": true,
+            "example": "Sector 1"
+          },
+          "residenceType": {"$ref": "#/components/schemas/ResidenceType"},
+          "issueUpdatesEnabled": {
+            "type": "boolean",
+            "description": "Enable notifications for issue status updates",
+            "nullable": true
+          },
+          "communityNewsEnabled": {
+            "type": "boolean",
+            "description": "Enable community news notifications",
+            "nullable": true
+          },
+          "monthlyDigestEnabled": {
+            "type": "boolean",
+            "description": "Enable monthly digest emails",
+            "nullable": true
+          },
+          "achievementsEnabled": {
+            "type": "boolean",
+            "description": "Enable achievement and badge notifications",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to create a new user profile after Supabase authentication"
+      },
+      "EnhanceTextRequest": {
+        "required": ["category", "description"],
+        "type": "object",
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+            "description": "The original description of the civic issue to enhance",
+            "example": "groapa mare pe strada, periculos pentru masini"
+          },
+          "desiredOutcome": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Optional desired outcome to enhance",
+            "nullable": true,
+            "example": "sa fie reparat drumul"
+          },
+          "communityImpact": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Optional community impact description to enhance",
+            "nullable": true,
+            "example": "multi oameni trec pe aici zilnic"
+          },
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "location": {
+            "maxLength": 500,
+            "type": "string",
+            "description": "Optional location context for the enhancement",
+            "nullable": true,
+            "example": "Strada Mihai Eminescu, Sector 2"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for AI-enhanced text generation for civic issues"
+      },
+      "EnhanceTextResponse": {
+        "type": "object",
+        "properties": {
+          "enhancedDescription": {
+            "type": "string",
+            "description": "The enhanced description text",
+            "nullable": true
+          },
+          "enhancedDesiredOutcome": {
+            "type": "string",
+            "description": "The enhanced desired outcome text, if provided in request",
+            "nullable": true
+          },
+          "enhancedCommunityImpact": {
+            "type": "string",
+            "description": "The enhanced community impact text, if provided in request",
+            "nullable": true
+          },
+          "usedOriginalText": {
+            "type": "boolean",
+            "description": "Indicates if the original text was returned due to AI failure"
+          },
+          "warning": {
+            "type": "string",
+            "description": "Warning message if AI enhancement failed and original text was used",
+            "nullable": true
+          },
+          "isRateLimited": {
+            "type"       : "boolean",
+            "description": "Indicates if the request was rate limited"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for AI-enhanced text generation"
+      },
+      "GetModerationStatsResponse": {
+        "type": "object",
+        "properties": {
+          "adminUserId": {"type": "string", "format": "uuid"},
+          "adminName": {"type": "string", "nullable": true},
+          "totalActionsPerformed": {"type": "integer", "format": "int32"},
+          "issuesApproved": {"type": "integer", "format": "int32"},
+          "issuesRejected": {"type": "integer", "format": "int32"},
+          "changesRequested": {"type": "integer", "format": "int32"},
+          "averageReviewTimeHours": {"type": "number", "format": "double"},
+          "lastActionDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "actionsToday": {"type": "integer", "format": "int32"},
+          "actionsThisWeek": {"type": "integer", "format": "int32"},
+          "actionsThisMonth": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Overall health status: Healthy or Degraded",
+            "nullable": true,
+            "example": "Healthy"
+          },
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the health check",
+            "format"     : "date-time"
+          },
+          "version": {
+            "type": "string",
+            "description": "API version",
+            "nullable": true,
+            "example": "1.0.0"
+          },
+          "database": {
+            "type": "string",
+            "description": "Database connectivity status: connected, disconnected, or timeout",
+            "nullable": true,
+            "example": "connected"
+          },
+          "databaseError": {
+            "type": "string",
+            "description": "Database error message if connectivity failed",
+            "nullable": true
+          },
+          "supabase": {
+            "type": "string",
+            "description": "Supabase authentication service connectivity status",
+            "nullable": true,
+            "example": "connected"
+          },
+          "environment": {
+            "type": "string",
+            "description": "Runtime environment name (Development, Production, etc.)",
+            "nullable": true,
+            "example": "Production"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response returned by the health check endpoint"
+      },
+      "IssueActionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string", "nullable": true},
+          "issueId": {"type": "string", "format": "uuid", "nullable": true},
+          "newStatus": {"type": "string", "nullable": true},
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp in UTC",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IssueAuthorityInput": {
+        "type": "object",
+        "properties": {
+          "authorityId": {
+            "type": "string",
+            "description": "ID of a predefined authority. If provided, CustomName and CustomEmail should be null.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "customName": {
+            "maxLength": 200,
+            "type": "string",
+            "description": "Custom authority name. Required if AuthorityId is not provided.",
+            "nullable": true
+          },
+          "customEmail": {
+            "maxLength": 255,
+            "type": "string",
+            "description": "Custom authority email. Required if AuthorityId is not provided.",
+            "format": "email",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Input model for linking an authority to an issue"
+      },
+      "IssueAuthorityResponse": {
+        "type": "object",
+        "properties": {
+          "authorityId": {
+            "type": "string",
+            "description": "ID of the predefined authority (null if custom)",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Authority name (from predefined or custom)",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Authority email (from predefined or custom)",
+            "nullable": true
+          },
+          "isPredefined": {
+            "type": "boolean",
+            "description": "True if this is a predefined authority, false if custom"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for authority linked to an issue"
+      },
+      "IssueCategory": {
+        "enum": [
+          "Infrastructure", "Environment",    "Transportation",
+          "PublicServices", "Safety",         "Other"
+        ],
+        "type": "string",
+        "description": "Possible values: Infrastructure, Environment, Transportation, PublicServices, Safety, Other",
+        "format": "int32"
+      },
+      "IssueDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "title": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "address": {"type": "string", "nullable": true},
+          "latitude": {"type": "number", "format": "double"},
+          "longitude": {"type": "number", "format": "double"},
+          "district": {"type": "string", "nullable": true},
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "status": {"$ref": "#/components/schemas/IssueStatus"},
+          "emailsSent": {"type": "integer", "format": "int32"},
+          "communityVotes": {"type": "integer", "format": "int32"},
+          "hasVoted": {"type": "boolean", "nullable": true},
+          "desiredOutcome": {"type": "string", "nullable": true},
+          "communityImpact": {"type": "string", "nullable": true},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "updatedAt": {
+            "type"       : "string",
+            "description": "Last update timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "photos": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssuePhotoResponse"},
+            "nullable": true
+          },
+          "authorities": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssueAuthorityResponse"},
+            "nullable": true
+          },
+          "user": {"$ref": "#/components/schemas/UserBasicResponse"}
+        },
+        "additionalProperties": false
+      },
+      "IssueListResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "title": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "address": {"type": "string", "nullable": true},
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "emailsSent": {"type": "integer", "format": "int32"},
+          "communityVotes": {"type": "integer", "format": "int32"},
+          "hasVoted": {"type": "boolean", "nullable": true},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "mainPhotoUrl": {"type": "string", "nullable": true},
+          "district": {"type": "string", "nullable": true},
+          "status": {"$ref": "#/components/schemas/IssueStatus"}
+        },
+        "additionalProperties": false
+      },
+      "IssuePhotoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "url": {"type": "string", "nullable": true},
+          "description": {"type": "string", "nullable": true},
+          "isPrimary": {"type": "boolean"},
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IssueStatus": {
+        "enum": [
+          "Unspecified", "Draft",       "Submitted",   "UnderReview",
+          "Active",      "Resolved",    "Rejected",    "Cancelled"
+        ],
+        "type": "string",
+        "description": "Possible values: Unspecified, Draft, Submitted, UnderReview, Active, Resolved, Rejected, Cancelled",
+        "format": "int32"
+      },
+      "JwksCacheClearResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Result message",
+            "nullable": true,
+            "example": "JWKS cache cleared successfully"
+          },
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the operation",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for JWKS cache clear operation"
+      },
+      "JwksCacheInfo": {
+        "type": "object",
+        "properties": {
+          "hitRate": {
+            "type": "number",
+            "description": "Cache hit rate as a percentage (0-100)",
+            "format": "double",
+            "example": 95.5
+          },
+          "lastRefresh": {
+            "type": "string",
+            "description": "ISO 8601 string of the last cache refresh time",
+            "nullable": true,
+            "example": "2026-02-20 14:30:00 UTC"
+          },
+          "totalRequests": {
+            "type": "integer",
+            "description": "Total number of JWKS resolution requests",
+            "format": "int32",
+            "example": 1250
+          }
+        },
+        "additionalProperties": false,
+        "description": "JWKS cache statistics nested in health and stats responses"
+      },
+      "JwksCacheRefreshResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Result message",
+            "nullable": true,
+            "example": "JWKS cache refreshed successfully"
+          },
+          "keyCount": {
+            "type": "integer",
+            "description": "Number of keys loaded after refresh",
+            "format": "int32",
+            "example": 1
+          },
+          "availableKeyIds": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Available key IDs after refresh",
+            "nullable": true
+          },
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the operation",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for JWKS cache refresh operation"
+      },
+      "JwksCacheStats": {
+        "type": "object",
+        "properties": {
+          "hitRate": {
+            "type"       : "number",
+            "description": "Cache hit rate as a percentage",
+            "format"     : "double"
+          },
+          "hitRateDecimal": {
+            "type"       : "number",
+            "description": "Cache hit rate as a decimal (0.0-1.0)",
+            "format"     : "double"
+          },
+          "totalRequests": {
+            "type"       : "integer",
+            "description": "Total number of requests",
+            "format"     : "int32"
+          },
+          "cacheHits": {
+            "type"       : "integer",
+            "description": "Number of cache hits",
+            "format"     : "int32"
+          },
+          "cacheMisses": {
+            "type"       : "integer",
+            "description": "Number of cache misses",
+            "format"     : "int32"
+          },
+          "lastRefresh": {
+            "type": "string",
+            "description": "Formatted last refresh timestamp",
+            "nullable": true
+          },
+          "lastRefreshUtc": {
+            "type": "string",
+            "description": "Last refresh as nullable DateTime",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Extended cache statistics for the stats endpoint"
+      },
+      "JwksErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Error status or type",
+            "nullable": true
+          },
+          "jwksEndpoint": {
+            "type": "string",
+            "description": "JWKS endpoint status",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "description": "Error description",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message",
+            "nullable": true
+          },
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the error",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Error response for JWKS endpoints"
+      },
+      "JwksHealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status: Healthy or Unhealthy",
+            "nullable": true,
+            "example": "Healthy"
+          },
+          "jwksEndpoint": {
+            "type": "string",
+            "description": "JWKS endpoint connectivity status",
+            "nullable": true,
+            "example": "Connected"
+          },
+          "keyCount": {
+            "type": "integer",
+            "description": "Number of signing keys available",
+            "format": "int32",
+            "example": 1
+          },
+          "cache": {"$ref": "#/components/schemas/JwksCacheInfo"},
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the health check",
+            "format"     : "date-time"
+          },
+          "availableKeyIds": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Available key IDs for JWT validation",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for the JWKS health check endpoint"
+      },
+      "JwksKeyDetail": {
+        "type": "object",
+        "properties": {
+          "kid": {"type": "string", "description": "Key ID", "nullable": true},
+          "kty": {
+            "type": "string",
+            "description": "Key type (e.g. RSA)",
+            "nullable": true
+          },
+          "use": {
+            "type": "string",
+            "description": "Key usage (e.g. sig)",
+            "nullable": true
+          },
+          "alg": {
+            "type": "string",
+            "description": "Algorithm (e.g. RS256)",
+            "nullable": true
+          },
+          "keyOps": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Key operations",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Detailed key information for the stats endpoint"
+      },
+      "JwksKeysInfo": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type"       : "integer",
+            "description": "Total number of keys",
+            "format"     : "int32"
+          },
+          "keyDetails": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/JwksKeyDetail"},
+            "description": "Detailed information about each key",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Keys section of the stats response"
+      },
+      "JwksStatsResponse": {
+        "type": "object",
+        "properties": {
+          "cache": {"$ref": "#/components/schemas/JwksCacheStats"},
+          "keys": {"$ref": "#/components/schemas/JwksKeysInfo"},
+          "timestamp": {
+            "type"       : "string",
+            "description": "UTC timestamp of the stats query",
+            "format"     : "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for the JWKS stats endpoint (admin only)"
+      },
+      "LeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "rank": {"type": "integer", "format": "int32"},
+          "user": {"$ref": "#/components/schemas/UserInfo"},
+          "points": {
+            "type"       : "integer",
+            "description": "Total points earned through gamification",
+            "format"     : "int32"
+          },
+          "level": {
+            "type"       : "integer",
+            "description": "User level based on points",
+            "format"     : "int32"
+          },
+          "issuesReported": {"type": "integer", "format": "int32"},
+          "issuesResolved": {"type": "integer", "format": "int32"},
+          "recentBadges": {
+            "type": "array",
+            "items": {"type": "string"},
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LeaderboardResponse": {
+        "type": "object",
+        "properties": {
+          "leaderboard": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/LeaderboardEntry"},
+            "nullable": true
+          },
+          "period": {"type": "string", "nullable": true},
+          "category": {"type": "string", "nullable": true},
+          "totalEntries": {"type": "integer", "format": "int32"},
+          "generatedAt": {"type": "string", "format": "date-time"}
+        },
+        "additionalProperties": false
+      },
+      "PagedResultOfActivityResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/ActivityResponse"},
+            "nullable": true
+          },
+          "totalItems": {"type": "integer", "format": "int32"},
+          "page": {"type": "integer", "format": "int32"},
+          "pageSize": {"type": "integer", "format": "int32"},
+          "totalPages": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "PagedResultOfAdminActionResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/AdminActionResponse"},
+            "nullable": true
+          },
+          "totalItems": {"type": "integer", "format": "int32"},
+          "page": {"type": "integer", "format": "int32"},
+          "pageSize": {"type": "integer", "format": "int32"},
+          "totalPages": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "PagedResultOfAdminIssueResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/AdminIssueResponse"},
+            "nullable": true
+          },
+          "totalItems": {"type": "integer", "format": "int32"},
+          "page": {"type": "integer", "format": "int32"},
+          "pageSize": {"type": "integer", "format": "int32"},
+          "totalPages": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "PagedResultOfCommentResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/CommentResponse"},
+            "nullable": true
+          },
+          "totalItems": {"type": "integer", "format": "int32"},
+          "page": {"type": "integer", "format": "int32"},
+          "pageSize": {"type": "integer", "format": "int32"},
+          "totalPages": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "PagedResultOfIssueListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssueListResponse"},
+            "nullable": true
+          },
+          "totalItems": {"type": "integer", "format": "int32"},
+          "page": {"type": "integer", "format": "int32"},
+          "pageSize": {"type": "integer", "format": "int32"},
+          "totalPages": {"type": "integer", "format": "int32"}
+        },
+        "additionalProperties": false
+      },
+      "RejectIssueRequest": {
+        "required": ["reason"],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+            "description": "Reason for rejection, shown to the issue author",
+            "example": "Duplicate of existing issue #123. Please support the existing campaign instead."
+          },
+          "internalNotes": {
+            "maxLength": 2000,
+            "type": "string",
+            "description": "Internal admin notes not shown to the user",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to reject a submitted issue"
+      },
+      "RequestChangesRequest": {
+        "required": ["requestedChanges"],
+        "type": "object",
+        "properties": {
+          "requestedChanges": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+            "description": "Description of the changes needed, shown to the issue author",
+            "example": "Please add a more specific address and upload at least one photo of the issue."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to ask the issue author for changes before approval"
+      },
+      "ResidenceType": {
+        "enum": ["Apartment", "House", "Business"],
+        "type": "string",
+        "description": "Possible values: Apartment, House, Business",
+        "format": "int32"
+      },
+      "UpdateCommentRequest": {
+        "required": ["content"],
+        "type": "object",
+        "properties": {
+          "content": {"maxLength": 2000, "minLength": 1, "type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "UpdateIssueRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+            "description": "Brief, descriptive title of the issue (max 200 characters)",
+            "nullable": true
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+            "description": "Detailed description of the issue",
+            "nullable": true
+          },
+          "category": {"$ref": "#/components/schemas/IssueCategory"},
+          "address": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string",
+            "description": "Street address or location description",
+            "nullable": true
+          },
+          "district": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "District or sector name",
+            "nullable": true
+          },
+          "authorities": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/IssueAuthorityInput"},
+            "description": "Target authorities for this issue (replaces existing authorities)",
+            "nullable": true
+          },
+          "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": "number",
+            "description": "GPS latitude coordinate",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": "number",
+            "description": "GPS longitude coordinate",
+            "format": "double",
+            "nullable": true
+          },
+          "urgency": {"$ref": "#/components/schemas/UrgencyLevel"},
+          "desiredOutcome": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Desired outcome or solution",
+            "nullable": true
+          },
+          "communityImpact": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "Impact on the community",
+            "nullable": true
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "URLs of uploaded photos (replaces existing photos, max 8)",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for updating an existing civic issue.\nAll fields are optional - only provided fields will be updated.\nUser can only update their own issues (except Cancelled or Resolved).\nAfter update, status is set to UnderReview for admin re-approval."
+      },
+      "UpdateIssueStatusRequest": {
+        "required": ["status"],
+        "type": "object",
+        "properties": {
+          "status": {"$ref": "#/components/schemas/IssueStatus"}
+        },
+        "additionalProperties": false,
+        "description": "Request model for updating an issue's status.\nUsers can only change status of their own issues."
+      },
+      "UpdateUserProfileRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "Updated display name (null to keep current)",
+            "nullable": true,
+            "example": "Ion Popescu"
+          },
+          "photoUrl": {
+            "maxLength": 500,
+            "type": "string",
+            "description": "Updated profile photo URL (null to keep current)",
+            "format": "uri",
+            "nullable": true,
+            "example": "https://storage.civiti.ro/avatars/user-123.jpg"
+          },
+          "county": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "Updated county (null to keep current)",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "Updated city (null to keep current)",
+            "nullable": true
+          },
+          "district": {
+            "maxLength": 100,
+            "type": "string",
+            "description": "Updated district (null to keep current)",
+            "nullable": true
+          },
+          "residenceType": {"$ref": "#/components/schemas/ResidenceType"},
+          "issueUpdatesEnabled": {
+            "type": "boolean",
+            "description": "Update issue update notification preference",
+            "nullable": true
+          },
+          "communityNewsEnabled": {
+            "type": "boolean",
+            "description": "Update community news notification preference",
+            "nullable": true
+          },
+          "monthlyDigestEnabled": {
+            "type": "boolean",
+            "description": "Update monthly digest preference",
+            "nullable": true
+          },
+          "achievementsEnabled": {
+            "type": "boolean",
+            "description": "Update achievement notification preference",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to update an existing user profile"
+      },
+      "UrgencyLevel": {
+        "enum": ["Unspecified", "Low", "Medium", "High", "Urgent"],
+        "type": "string",
+        "description": "Possible values: Unspecified, Low, Medium, High, Urgent",
+        "format": "int32"
+      },
+      "UserBasicResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "name": {"type": "string", "nullable": true},
+          "photoUrl": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "UserGamificationResponse": {
+        "type": "object",
+        "properties": {
+          "points": {
+            "type"       : "integer",
+            "description": "Total points earned through gamification",
+            "format"     : "int32"
+          },
+          "level": {
+            "type"       : "integer",
+            "description": "User level based on points",
+            "format"     : "int32"
+          },
+          "issuesReported": {"type": "integer", "format": "int32"},
+          "issuesResolved": {"type": "integer", "format": "int32"},
+          "communityVotes": {"type": "integer", "format": "int32"},
+          "currentLoginStreak": {"type": "integer", "format": "int32"},
+          "longestLoginStreak": {"type": "integer", "format": "int32"},
+          "recentBadges": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/BadgeResponse"},
+            "nullable": true
+          },
+          "activeAchievements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AchievementProgressResponse"
+            },
+            "nullable": true
+          },
+          "currentLevelPoints": {"type": "integer", "format": "int32"},
+          "nextLevelPoints": {"type": "integer", "format": "int32"},
+          "pointsToNextLevel": {"type": "integer", "format": "int32"},
+          "pointsInCurrentLevel": {"type": "integer", "format": "int32"},
+          "levelProgressPercentage": {"type": "number", "format": "double"}
+        },
+        "additionalProperties": false
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "displayName": {"type": "string", "nullable": true},
+          "photoUrl": {"type": "string", "nullable": true},
+          "city": {"type": "string", "nullable": true}
+        },
+        "additionalProperties": false
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type"       : "string",
+            "description": "Unique identifier",
+            "format"     : "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "nullable": true
+          },
+          "displayName": {"type": "string", "nullable": true},
+          "photoUrl": {"type": "string", "nullable": true},
+          "county": {"type": "string", "nullable": true},
+          "city": {"type": "string", "nullable": true},
+          "district": {"type": "string", "nullable": true},
+          "residenceType": {"type": "string", "nullable": true},
+          "points": {
+            "type"       : "integer",
+            "description": "Total points earned through gamification",
+            "format"     : "int32"
+          },
+          "level": {
+            "type"       : "integer",
+            "description": "User level based on points",
+            "format"     : "int32"
+          },
+          "createdAt": {
+            "type"       : "string",
+            "description": "Creation timestamp in UTC",
+            "format"     : "date-time"
+          },
+          "emailVerified": {"type": "boolean"},
+          "issueUpdatesEnabled": {"type": "boolean"},
+          "communityNewsEnabled": {"type": "boolean"},
+          "monthlyDigestEnabled": {"type": "boolean"},
+          "achievementsEnabled": {"type": "boolean"},
+          "gamification": {
+            "$ref": "#/components/schemas/UserGamificationResponse"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "JWT Authorization header using the Bearer scheme.\n\nEnter your token in the text input below.\n\nExample: \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {"name": "Activity"      },
+    {"name": "Admin"         },
+    {"name": "Authentication"},
+    {"name": "Authorities"   },
+    {"name": "Utility"       },
+    {"name": "Comments"      },
+    {"name": "Gamification"  },
+    {"name": "Health"        },
+    {"name": "Issues"        },
+    {"name": "JWKS"          },
+    {"name": "User"          }
+  ]
+}
