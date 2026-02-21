@@ -222,7 +222,16 @@ const { session, requireAuth } = useAuth();
 
 - Branch: `feat/S{nn}-short-name` (also `fix/`, `refactor/`, `docs/`)
 - Commits: `type(scope): description` — English, conventional commits
-- PR: `Closes #N` → HITL review → merge → update story status
+- PR: `Closes #N` → wait for checks → resolve comments → merge → update story status
+
+### PR Merge Rules (MANDATORY)
+
+Before merging any PR:
+
+1. **All CI/status checks must pass** — run `gh pr checks <number> --watch` and wait for every check (including external services like Greptile) to complete with ✓
+2. **All review comments/conversations must be resolved** — run `gh pr view <number> --json reviewDecision,reviews` and verify no unresolved threads remain. Address every comment before merging.
+3. **Never merge with pending or failing checks.** Never merge with unresolved comments.
+4. If a reviewer requests changes, implement the fixes, push, and wait for re-review.
 
 ---
 

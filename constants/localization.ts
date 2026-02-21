@@ -9,7 +9,6 @@ export const Localization = {
 
   // Urgency levels
   urgency: {
-    Unspecified: 'Nespecificat',
     Low: 'Scăzută',
     Medium: 'Medie',
     High: 'Ridicată',
