@@ -97,6 +97,8 @@ const styles = StyleSheet.create({ container: { flex: 1, padding: Spacing.lg } }
 **Spacing** — always tokens: `Spacing.sm`, `Spacing.md`, `Spacing.lg` (never `padding: 16`)
 **Colors** — always tokens: `useThemeColor()` or `Colors.light.*` (never `'#14213D'`)
 
+> **⚠️ CRITICAL: Read `docs/design-system.md` and copy exact hex values. Never write a color from memory. Every status color, category color, and urgency color has a specific hex — if you use a different shade, the PR will be rejected.**
+
 ---
 
 ## Component Patterns
@@ -244,6 +246,7 @@ npm run lint         # zero warnings
 
 - [ ] Light + dark mode
 - [ ] No hardcoded colors/spacing/strings
+- [ ] All color hex values match `docs/design-system.md` exactly (diff check)
 - [ ] Loading, error, empty states handled
 - [ ] Touch targets ≥ 44pt/48dp
 - [ ] `@/` imports, `StyleSheet.create()`, types from OpenAPI
@@ -260,6 +263,7 @@ npm run lint         # zero warnings
 | `sharedValue.value` | `.get()` / `.set()` |
 | Inline style objects | `StyleSheet.create()` |
 | Hardcoded colors / spacing / strings | Tokens: `Colors`, `Spacing`, `localization.ts` |
+| Color values from memory (wrong shade) | **Read `design-system.md` and copy exact hex.** Never approximate. |
 | `{count && <C />}` | **CRASH.** Use `{count ? <C /> : null}` |
 | Bare strings in `<View>` | **CRASH.** Wrap in `<Text>` |
 | `TouchableOpacity` | `Pressable` |

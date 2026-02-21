@@ -64,18 +64,18 @@ export const Colors = {
 // ─── Domain Color Maps ───────────────────────────────────────────
 
 export const StatusColors: Record<IssueStatus, string> = {
-  Draft: '#9CA3AF',
-  Submitted: '#1890FF',
-  UnderReview: '#FCA311',
-  Active: '#28A745',
-  Resolved: '#6B7280',
+  Draft: '#64748B',
+  Submitted: '#14213D',
+  UnderReview: '#D48806',
+  Active: '#1890FF',
+  Resolved: '#28A745',
   Rejected: '#DC3545',
-  Cancelled: '#9CA3AF',
+  Cancelled: '#64748B',
 };
 
 export const CategoryColors: Record<IssueCategory, string> = {
   Infrastructure: '#F59E0B',
-  Environment: '#10B981',
+  Environment: '#22C55E',
   Transportation: '#3B82F6',
   PublicServices: '#8B5CF6',
   Safety: '#EF4444',
@@ -83,10 +83,10 @@ export const CategoryColors: Record<IssueCategory, string> = {
 };
 
 export const UrgencyColors: Record<UrgencyLevel, string> = {
-  Low: '#10B981',
+  Low: '#28A745',
   Medium: '#F59E0B',
   High: '#F97316',
-  Urgent: '#EF4444',
+  Urgent: '#DC3545',
 };
 
 // ─── Fonts ───────────────────────────────────────────────────────

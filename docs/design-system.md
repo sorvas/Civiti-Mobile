@@ -2,6 +2,8 @@
 
 Visual conventions for Civiti-Mobile. Matches civiti.ro web brand. All values in dp unless noted.
 
+> **⚠️ AGENTS: Every hex value, spacing value, and spec in this file is the source of truth. Copy values verbatim — never approximate, round, or substitute from memory. If a value isn't in this file, it doesn't exist in our design system.**
+
 ## Colors
 
 ### Core Brand

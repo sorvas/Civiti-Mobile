@@ -23,3 +23,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Design system color check
+        run: node scripts/check-colors.js
