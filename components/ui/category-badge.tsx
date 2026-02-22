@@ -13,6 +13,13 @@ type CategoryBadgeProps = {
 
 type IconSymbolName = Parameters<typeof IconSymbol>[0]['name'];
 
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 const CATEGORY_ICONS: Record<IssueCategory, IconSymbolName> = {
   Infrastructure: 'wrench.fill',
   Environment: 'leaf.fill',
@@ -26,7 +33,7 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
   const color = CategoryColors[category];
 
   return (
-    <View style={[styles.badge, { backgroundColor: `${color}1A` }]}>
+    <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.1) }]}>
       <IconSymbol name={CATEGORY_ICONS[category]} size={14} color={color} />
       <ThemedText type="badge" style={{ color }}>
         {Localization.category[category]}

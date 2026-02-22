@@ -42,9 +42,9 @@ const VARIANT_COLORS = {
     border: 'transparent',
   },
   danger: {
-    bg: '#DC3545',
+    bg: Colors.light.error,
     text: BrandColors.white,
-    pressed: '#C82333',
+    pressed: 'rgba(220, 53, 69, 0.9)',
     border: 'transparent',
   },
 } as const;
