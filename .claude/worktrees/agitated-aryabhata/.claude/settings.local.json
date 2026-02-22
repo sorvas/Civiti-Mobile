@@ -3,7 +3,9 @@
     "allow": [
       "mcp__Context7__resolve-library-id",
       "mcp__Context7__query-docs",
-      "WebFetch(domain:docs.expo.dev)"
+      "WebFetch(domain:docs.expo.dev)",
+      "mcp__github__list_issues",
+      "mcp__github__get_me"
     ]
   }
 }
