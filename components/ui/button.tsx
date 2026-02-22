@@ -1,0 +1,116 @@
+import {
+  ActivityIndicator,
+  Pressable,
+  type PressableProps,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { BrandColors, Colors } from '@/constants/theme';
+import { BorderRadius, Spacing } from '@/constants/spacing';
+import { useThemeColor } from '@/hooks/use-theme-color';
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+
+type ButtonProps = Omit<PressableProps, 'style'> & {
+  variant?: ButtonVariant;
+  title: string;
+  isLoading?: boolean;
+  size?: 'default' | 'small';
+  style?: StyleProp<ViewStyle>;
+};
+
+const VARIANT_COLORS = {
+  primary: {
+    bg: BrandColors.orangeWeb,
+    text: BrandColors.oxfordBlue,
+    pressed: BrandColors.orangeWeb90,
+    border: 'transparent',
+  },
+  secondary: {
+    bg: BrandColors.white,
+    text: BrandColors.oxfordBlue,
+    pressed: BrandColors.platinum,
+    border: BrandColors.platinum,
+  },
+  ghost: {
+    bg: 'transparent',
+    text: BrandColors.oxfordBlue,
+    pressed: BrandColors.orangeWeb20,
+    border: 'transparent',
+  },
+  danger: {
+    bg: '#DC3545',
+    text: BrandColors.white,
+    pressed: '#C82333',
+    border: 'transparent',
+  },
+} as const;
+
+export function Button({
+  variant = 'primary',
+  title,
+  isLoading = false,
+  size = 'default',
+  disabled,
+  style,
+  ...rest
+}: ButtonProps) {
+  const colors = VARIANT_COLORS[variant];
+  const textColor = useThemeColor(
+    { light: colors.text, dark: variant === 'ghost' ? Colors.dark.text : colors.text },
+    'text',
+  );
+  const isDisabled = disabled || isLoading;
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.base,
+        size === 'small' ? styles.small : styles.default,
+        {
+          backgroundColor: pressed ? colors.pressed : colors.bg,
+          borderColor: colors.border,
+          opacity: isDisabled ? 0.5 : 1,
+        },
+        style,
+      ]}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: isDisabled, busy: isLoading }}
+      {...rest}
+    >
+      {isLoading ? (
+        <ActivityIndicator color={textColor} size="small" />
+      ) : (
+        <ThemedText
+          type={size === 'small' ? 'label' : 'button'}
+          style={{ color: textColor }}
+        >
+          {title}
+        </ThemedText>
+      )}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.lg,
+  },
+  default: {
+    height: 48,
+    minWidth: 48,
+  },
+  small: {
+    height: 36,
+    minWidth: 36,
+  },
+});

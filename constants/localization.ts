@@ -64,6 +64,14 @@ export const Localization = {
     edit: 'Editează',
   },
 
+  // State messages
+  states: {
+    loading: 'Se încarcă...',
+    empty: 'Nu sunt rezultate',
+    emptyIssues: 'Nu există probleme încă',
+    emptyComments: 'Fii primul care comentează',
+  },
+
   // Placeholders
   placeholders: {
     search: 'Caută...',
