@@ -27,7 +27,7 @@ export function formatTimeAgo(isoDate: string): string {
   if (days < 7) return `${days} ${t.days}`;
 
   const weeks = Math.floor(days / 7);
-  if (days < 30) return `${weeks} ${t.weeks}`;
+  if (weeks < 4) return `${weeks} ${t.weeks}`;
 
   const months = Math.floor(days / 30);
   return `${months} ${t.months}`;
