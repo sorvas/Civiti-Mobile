@@ -30,6 +30,7 @@ const MAPPING = {
   // People
   'person.2.fill': 'people',
   // Actions
+  'line.3.horizontal.decrease.circle': 'filter-list',
   'heart.fill': 'favorite',
   'envelope.fill': 'email',
   'mappin.circle.fill': 'location-on',

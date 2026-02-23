@@ -4,6 +4,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import 'react-native-url-polyfill/auto';
 
@@ -43,17 +45,25 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryProvider>
-      <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="issues/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ presentation: 'modal', headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <QueryProvider>
+        <AuthProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="issues/[id]" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ presentation: 'modal', headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});
