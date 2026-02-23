@@ -29,6 +29,10 @@ async function getItemNative(key: string): Promise<string | null> {
 }
 
 async function setItemNative(key: string, value: string): Promise<void> {
+  if (!value) {
+    await removeItemNative(key);
+    return;
+  }
   const chunks = value.match(/.{1,2048}/g) ?? [];
   await SecureStore.setItemAsync(`${key}_count`, String(chunks.length));
   await Promise.all(
