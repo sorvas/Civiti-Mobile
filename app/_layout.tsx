@@ -13,6 +13,7 @@ import {
   FiraSans_800ExtraBold,
 } from '@expo-google-fonts/fira-sans';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { QueryProvider } from '@/store/query-client';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,11 +41,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </QueryProvider>
   );
 }
