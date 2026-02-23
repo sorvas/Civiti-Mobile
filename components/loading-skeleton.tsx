@@ -16,7 +16,7 @@ type SkeletonBlockProps = ViewProps & {
   height?: number;
 };
 
-function SkeletonBlock({ width = '100%', height = 16, style, ...rest }: SkeletonBlockProps) {
+export function SkeletonBlock({ width = '100%', height = 16, style, ...rest }: SkeletonBlockProps) {
   const baseColor = useThemeColor({}, 'border');
   const opacity = useSharedValue(0.3);
 
