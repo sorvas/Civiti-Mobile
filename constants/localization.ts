@@ -43,6 +43,22 @@ export const Localization = {
     Other: 'Altele',
   },
 
+  // Issue card meta
+  issues: {
+    votes: 'voturi',
+    emails: 'emailuri trimise',
+  },
+
+  // Relative time
+  timeAgo: {
+    now: 'acum',
+    minutes: 'min',
+    hours: 'h',
+    days: 'z',
+    weeks: 'săpt',
+    months: 'luni',
+  },
+
   // Error messages
   errors: {
     noConnection: 'Fără conexiune la internet',

@@ -27,6 +27,8 @@ const MAPPING = {
   'building.2.fill': 'account-balance',
   'shield.fill': 'shield',
   'ellipsis.circle.fill': 'more-horiz',
+  // People
+  'person.2.fill': 'people',
   // Actions
   'heart.fill': 'favorite',
   'envelope.fill': 'email',

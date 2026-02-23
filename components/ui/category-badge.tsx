@@ -6,19 +6,13 @@ import type { IssueCategory } from '@/constants/enums';
 import { Localization } from '@/constants/localization';
 import { CategoryColors } from '@/constants/theme';
 import { BorderRadius, Spacing } from '@/constants/spacing';
+import { hexToRgba } from '@/utils/colors';
 
 type CategoryBadgeProps = {
   category: IssueCategory;
 };
 
 type IconSymbolName = Parameters<typeof IconSymbol>[0]['name'];
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
 
 const CATEGORY_ICONS: Record<IssueCategory, IconSymbolName> = {
   Infrastructure: 'wrench.fill',

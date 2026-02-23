@@ -26,11 +26,16 @@ app/                  # Expo Router file-based routing
   (auth)/             # Auth modal stack (presentation: 'modal')
     _layout.tsx       # Auth stack config
     login.tsx         # Login screen (/login)
+  issues/
+    [id].tsx          # Issue detail (placeholder — S09)
 components/           # Reusable UI components
   ui/                 # Lower-level UI primitives
+  issue-card.tsx      # Issue list card (photo, badges, meta)
+  issue-card-skeleton.tsx # Card-shaped loading placeholder
 constants/
   theme.ts            # Colors (light/dark) and font families
-hooks/                # Custom hooks (useColorScheme, useThemeColor)
+hooks/                # Custom hooks (useColorScheme, useThemeColor, useIssues, useCategories)
+utils/                # Pure utility functions (colors, formatTimeAgo)
 assets/images/        # App icons, splash, logos
 ```
 
