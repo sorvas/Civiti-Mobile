@@ -5,11 +5,11 @@ import { ThemedView } from '@/components/themed-view';
 import { Localization } from '@/constants/localization';
 import { Spacing } from '@/constants/spacing';
 
-export default function IssuesScreen() {
+export default function CreateScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="h1">{Localization.tabs.issues}</ThemedText>
-      <ThemedText type="caption">{Localization.placeholderCaptions.issues}</ThemedText>
+      <ThemedText type="h1">{Localization.tabs.create}</ThemedText>
+      <ThemedText type="caption">{Localization.placeholderCaptions.create}</ThemedText>
     </ThemedView>
   );
 }

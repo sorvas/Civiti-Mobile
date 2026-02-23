@@ -16,12 +16,16 @@ npm run lint       # ESLint (flat config via expo lint)
 
 ```
 app/                  # Expo Router file-based routing
-  _layout.tsx         # Root layout (ThemeProvider, StatusBar)
-  modal.tsx           # Modal screen (presentation: 'modal')
-  (tabs)/             # Tab navigation group
-    _layout.tsx       # Tab navigator config (Home, Explore)
-    index.tsx         # Home screen (/)
-    explore.tsx       # Explore screen (/explore)
+  _layout.tsx         # Root layout (providers, Stack)
+  (tabs)/             # Tab navigation group (4 tabs)
+    _layout.tsx       # Tab navigator config with auth gating
+    index.tsx         # Probleme — issues list (/)
+    create.tsx        # Creează — create wizard (/create)
+    my-issues.tsx     # Ale mele — user's issues (/my-issues)
+    profile.tsx       # Profil — user profile (/profile)
+  (auth)/             # Auth modal stack (presentation: 'modal')
+    _layout.tsx       # Auth stack config
+    login.tsx         # Login screen (/login)
 components/           # Reusable UI components
   ui/                 # Lower-level UI primitives
 constants/
