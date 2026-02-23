@@ -138,6 +138,11 @@ export type EnhanceTextResponse = {
   isRateLimited: boolean;
 }
 
+export type IssueFilters = Pick<
+  GetIssuesParams,
+  'category' | 'urgency' | 'status' | 'sortBy' | 'sortDescending'
+>;
+
 export type GetIssuesParams = PaginationParams &
   SortParams & {
     category?: IssueCategory;

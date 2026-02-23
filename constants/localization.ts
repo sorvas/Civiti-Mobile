@@ -93,6 +93,26 @@ export const Localization = {
     login: 'Autentificare',
   },
 
+  // Filter sheet
+  filter: {
+    title: 'Filtrează',
+    apply: 'Aplică filtrele',
+    reset: 'Resetează',
+    categoryLabel: 'Categorie',
+    urgencyLabel: 'Urgență',
+    statusLabel: 'Status',
+    sortLabel: 'Sortare',
+    activeFilters: 'filtre active',
+  },
+
+  // Sort options
+  sort: {
+    newest: 'Cele mai noi',
+    oldest: 'Cele mai vechi',
+    mostSupported: 'Cele mai susținute',
+    mostUrgent: 'Cele mai urgente',
+  },
+
   // Placeholder captions (dev-only, describes which story builds the real screen)
   placeholderCaptions: {
     issues: 'Placeholder — S06 will build the full issues list.',

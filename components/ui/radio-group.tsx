@@ -1,0 +1,71 @@
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { BrandColors } from '@/constants/theme';
+import { Spacing } from '@/constants/spacing';
+import { useThemeColor } from '@/hooks/use-theme-color';
+
+type RadioOption = {
+  value: string;
+  label: string;
+};
+
+type RadioGroupProps = {
+  options: RadioOption[];
+  selectedValue: string | null;
+  onValueChange: (value: string) => void;
+};
+
+export function RadioGroup({ options, selectedValue, onValueChange }: RadioGroupProps) {
+  const borderColor = useThemeColor({}, 'border');
+
+  return (
+    <View style={styles.container} accessibilityRole="radiogroup">
+      {options.map((option) => {
+        const isSelected = option.value === selectedValue;
+        return (
+          <Pressable
+            key={option.value}
+            style={styles.row}
+            onPress={() => onValueChange(option.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: isSelected }}
+            accessibilityLabel={option.label}
+          >
+            <View style={[styles.outerCircle, { borderColor: isSelected ? BrandColors.orangeWeb : borderColor }]}>
+              {isSelected && <View style={styles.innerCircle} />}
+            </View>
+            <ThemedText type="body">{option.label}</ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    gap: Spacing.xs,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    minHeight: 44,
+    paddingVertical: Spacing.sm,
+  },
+  outerCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  innerCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: BrandColors.orangeWeb,
+  },
+});
