@@ -19,6 +19,9 @@ async function getItemNative(key: string): Promise<string | null> {
         SecureStore.getItemAsync(`${key}_${i}`),
       ),
     );
+    if (chunks.some((chunk) => chunk === null)) {
+      return null;
+    }
     return chunks.join('');
   }
   // Fall back to non-chunked read for sessions stored before this adapter
