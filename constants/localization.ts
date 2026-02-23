@@ -76,6 +76,7 @@ export const Localization = {
     retry: 'Reîncearcă',
     cancel: 'Anulează',
     save: 'Salvează',
+    close: 'Închide',
     delete: 'Șterge',
     edit: 'Editează',
   },
@@ -103,6 +104,18 @@ export const Localization = {
     statusLabel: 'Status',
     sortLabel: 'Sortare',
     activeFilters: 'filtre active',
+  },
+
+  // View toggle
+  viewToggle: {
+    list: 'Listă',
+    map: 'Hartă',
+  },
+
+  // Map
+  map: {
+    noPins: 'Nu sunt probleme de afișat pe hartă',
+    webUnavailable: 'Harta nu este disponibilă pe web',
   },
 
   // Sort options
