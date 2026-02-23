@@ -72,6 +72,20 @@ export const Localization = {
     emptyComments: 'Fii primul care comentează',
   },
 
+  // Screen titles
+  screens: {
+    login: 'Autentificare',
+  },
+
+  // Placeholder captions (dev-only, describes which story builds the real screen)
+  placeholderCaptions: {
+    issues: 'Placeholder — S06 will build the full issues list.',
+    create: 'Placeholder — S13 will build the create wizard.',
+    myIssues: 'Placeholder — S16 will build the real screen.',
+    profile: 'Placeholder — S17 will build the real screen.',
+    login: 'Placeholder — S11 will build the login UI.',
+  },
+
   // Placeholders
   placeholders: {
     search: 'Caută...',
