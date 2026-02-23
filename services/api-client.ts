@@ -11,7 +11,7 @@ type TokenGetter = () =>
 
 let tokenGetter: TokenGetter | null = null;
 
-export function setTokenGetter(getter: TokenGetter): void {
+export function setTokenGetter(getter: TokenGetter | null): void {
   tokenGetter = getter;
 }
 
