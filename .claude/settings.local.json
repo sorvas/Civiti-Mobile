@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git checkout -b feat/S04-auth-setup)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npx expo install expo-secure-store)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npm install @supabase/supabase-js react-native-url-polyfill)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npm run lint 2>&1)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npx expo export --platform web 2>&1)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npx tsc --noEmit 2>&1 && npx expo export --platform web 2>&1)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npx tsc --noEmit 2>&1 | head -40)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && node -e \"\nconst { createClient } = require\\('@supabase/supabase-js'\\);\n// Just checking it loads fine\nconsole.log\\('supabase-js loaded successfully'\\);\n\" 2>&1)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && npm run lint 2>&1 | tail -20)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git status -u)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git reset HEAD .claude/settings.local.json)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git reset HEAD)",
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git add services/auth.ts store/auth-context.tsx app/_layout.tsx constants/api.ts services/api-client.ts docs/implementation-plan.md package.json package-lock.json app.json)"
+    ]
+  }
+}
