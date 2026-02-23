@@ -25,7 +25,7 @@ export function IssueCard({ issue, onPress }: IssueCardProps) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={issue.title ?? ''}
+      accessibilityLabel={issue.title || 'Issue card'}
       style={({ pressed }) => [
         styles.card,
         { backgroundColor: surface, borderColor: border, opacity: pressed ? 0.9 : 1 },
