@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import 'react-native-url-polyfill/auto';
 
 import {
   FiraSans_400Regular,
@@ -13,6 +14,7 @@ import {
   FiraSans_800ExtraBold,
 } from '@expo-google-fonts/fira-sans';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider } from '@/store/auth-context';
 import { QueryProvider } from '@/store/query-client';
 
 SplashScreen.preventAutoHideAsync();
@@ -42,12 +44,14 @@ export default function RootLayout() {
 
   return (
     <QueryProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AuthProvider>
     </QueryProvider>
   );
 }

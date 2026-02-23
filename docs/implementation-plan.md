@@ -10,8 +10,8 @@
 |---|---|---|---|---|
 | S01 | [#1](https://github.com/sorvas/Civiti-Mobile/issues/1) | Project cleanup & design tokens | — | `Done` |
 | S02 | [#2](https://github.com/sorvas/Civiti-Mobile/issues/2) | UI primitives | S01 | `Done` |
-| S03 | [#3](https://github.com/sorvas/Civiti-Mobile/issues/3) | API client & service layer | S01 | `pending` |
-| S04 | [#4](https://github.com/sorvas/Civiti-Mobile/issues/4) | Auth context & Supabase setup | S03 | `pending` |
+| S03 | [#3](https://github.com/sorvas/Civiti-Mobile/issues/3) | API client & service layer | S01 | `Done` |
+| S04 | [#4](https://github.com/sorvas/Civiti-Mobile/issues/4) | Auth context & Supabase setup | S03 | `Done` |
 | S05 | [#5](https://github.com/sorvas/Civiti-Mobile/issues/5) | Navigation shell & tab bar | S04 | `pending` |
 | S06 | [#6](https://github.com/sorvas/Civiti-Mobile/issues/6) | Issues list — card view | S02,S03,S05 | `pending` |
 | S07 | [#7](https://github.com/sorvas/Civiti-Mobile/issues/7) | Issues list — filter sheet | S06 | `pending` |
