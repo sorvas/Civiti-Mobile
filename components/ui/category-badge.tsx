@@ -24,7 +24,7 @@ const CATEGORY_ICONS: Record<IssueCategory, IconSymbolName> = {
 };
 
 export function CategoryBadge({ category }: CategoryBadgeProps) {
-  const color = CategoryColors[category];
+  const color = CategoryColors[category] ?? CategoryColors.Other;
 
   return (
     <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.1) }]}>

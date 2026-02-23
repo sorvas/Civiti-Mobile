@@ -17,7 +17,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { fg: string; bg: string }> = {
 };
 
 export function UrgencyBadge({ level }: UrgencyBadgeProps) {
-  const colors = URGENCY_STYLES[level];
+  const colors = URGENCY_STYLES[level] ?? URGENCY_STYLES.Low;
 
   return (
     <View style={[styles.badge, { backgroundColor: colors.bg }]}>
