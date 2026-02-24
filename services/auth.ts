@@ -169,7 +169,7 @@ export async function performOAuthSignIn(provider: 'google' | 'apple') {
     if (params.accessToken) {
       const sessionResult = await supabase.auth.setSession({
         access_token: params.accessToken,
-        refresh_token: params.refreshToken ?? '',
+        ...(params.refreshToken && { refresh_token: params.refreshToken }),
       });
       return { data: sessionResult.data?.session ?? null, error: sessionResult.error };
     }
