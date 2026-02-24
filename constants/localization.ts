@@ -274,6 +274,26 @@ export const Localization = {
     },
   },
 
+  // Create wizard
+  wizard: {
+    step1Title: 'Alege categoria',
+    step1Subtitle: 'Ce tip de problemă vrei să raportezi?',
+    step2Title: 'Adaugă fotografii',
+    step2Subtitle: 'Adaugă cel puțin o fotografie a problemei',
+    addPhotos: 'Adaugă fotografii',
+    camera: 'Cameră',
+    gallery: 'Galerie',
+    photoCount: (count: number, max: number) => `${count} din ${max} fotografii`,
+    minPhotos: 'Adaugă cel puțin o fotografie pentru a continua',
+    maxPhotos: 'Ai atins limita de fotografii',
+    permissionDenied: 'Accesul a fost refuzat. Verifică setările aplicației.',
+    uploading: 'Se încarcă...',
+    uploadFailed: 'Încărcarea a eșuat. Încearcă din nou.',
+    deletePhoto: 'Șterge fotografia',
+    next: 'Continuă',
+    back: 'Înapoi',
+  },
+
   // Placeholder captions (dev-only, describes which story builds the real screen)
   placeholderCaptions: {
     issues: 'Placeholder — S06 will build the full issues list.',

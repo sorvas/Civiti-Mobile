@@ -1,8 +1,8 @@
-import { toast } from 'burnt';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   AppState,
   Linking,
   Platform,
@@ -389,10 +389,7 @@ export default function IssueDetailScreen() {
           })
           .catch((err) => {
             console.warn('[email] Failed to open mailto link for issue', issue.id, err);
-            toast({
-              title: Localization.email.openFailed,
-              preset: 'error',
-            });
+            Alert.alert(Localization.email.openFailed);
           });
       });
     },

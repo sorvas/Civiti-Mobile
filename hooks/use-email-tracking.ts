@@ -1,4 +1,4 @@
-import { toast } from 'burnt';
+import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Localization } from '@/constants/localization';
@@ -13,18 +13,12 @@ export function useEmailTracking(issueId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues', 'detail', issueId] });
       queryClient.invalidateQueries({ queryKey: ['issues'] });
-      toast({
-        title: Localization.email.sentSuccess,
-        preset: 'done',
-      });
+      Alert.alert(Localization.email.sentSuccess);
     },
 
     onError: (err) => {
       console.warn('[email] Failed to confirm email sent for issue', issueId, err);
-      toast({
-        title: Localization.errors.generic,
-        preset: 'error',
-      });
+      Alert.alert(Localization.errors.generic);
     },
   });
 }
