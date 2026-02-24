@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -16,29 +17,49 @@ type RadioGroupProps = {
   onValueChange: (value: string) => void;
 };
 
+function RadioOptionItem({
+  option,
+  isSelected,
+  borderColor,
+  onPress,
+}: {
+  option: RadioOption;
+  isSelected: boolean;
+  borderColor: string;
+  onPress: (value: string) => void;
+}) {
+  const handlePress = useCallback(() => onPress(option.value), [onPress, option.value]);
+
+  return (
+    <Pressable
+      style={styles.row}
+      onPress={handlePress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: isSelected }}
+      accessibilityLabel={option.label}
+    >
+      <View style={[styles.outerCircle, { borderColor: isSelected ? BrandColors.orangeWeb : borderColor }]}>
+        {isSelected && <View style={styles.innerCircle} />}
+      </View>
+      <ThemedText type="body">{option.label}</ThemedText>
+    </Pressable>
+  );
+}
+
 export function RadioGroup({ options, selectedValue, onValueChange }: RadioGroupProps) {
   const borderColor = useThemeColor({}, 'border');
 
   return (
     <View style={styles.container} accessibilityRole="radiogroup">
-      {options.map((option) => {
-        const isSelected = option.value === selectedValue;
-        return (
-          <Pressable
-            key={option.value}
-            style={styles.row}
-            onPress={() => onValueChange(option.value)}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: isSelected }}
-            accessibilityLabel={option.label}
-          >
-            <View style={[styles.outerCircle, { borderColor: isSelected ? BrandColors.orangeWeb : borderColor }]}>
-              {isSelected && <View style={styles.innerCircle} />}
-            </View>
-            <ThemedText type="body">{option.label}</ThemedText>
-          </Pressable>
-        );
-      })}
+      {options.map((option) => (
+        <RadioOptionItem
+          key={option.value}
+          option={option}
+          isSelected={option.value === selectedValue}
+          borderColor={borderColor}
+          onPress={onValueChange}
+        />
+      ))}
     </View>
   );
 }

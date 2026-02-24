@@ -206,6 +206,74 @@ export const Localization = {
     registerPlaceholder: 'Înregistrarea va fi disponibilă în curând.',
   },
 
+  // Registration flow
+  register: {
+    header: 'Creează un cont',
+    displayNameLabel: 'Nume afișat',
+    termsLabel: 'Accept termenii și condițiile',
+    submitButton: 'Creează contul',
+    hasAccount: 'Ai deja cont?',
+    login: 'Conectează-te',
+    profileHeader: 'Completează profilul',
+    countyLabel: 'Județ',
+    cityLabel: 'Oraș',
+    districtLabel: 'Sector',
+    districtPlaceholder: 'Alege sectorul',
+    residenceLabel: 'Tip locuință',
+    residenceApartment: 'Apartament',
+    residenceHouse: 'Casă',
+    residenceBusiness: 'Business',
+    notificationsHeader: 'Notificări',
+    notifyIssueUpdates: 'Actualizări probleme',
+    notifyCommunityNews: 'Știri comunitate',
+    notifyMonthlyDigest: 'Rezumat lunar',
+    notifyAchievements: 'Realizări',
+    finishButton: 'Finalizează',
+    skipButton: 'Completează mai târziu',
+    defaultCounty: 'București',
+    defaultCity: 'București',
+    districts: [
+      'Sector 1',
+      'Sector 2',
+      'Sector 3',
+      'Sector 4',
+      'Sector 5',
+      'Sector 6',
+    ] as readonly string[],
+    termsPromptTitle: 'Termeni și condiții',
+    termsPromptBody: 'Pentru a continua, trebuie să accepți termenii și condițiile.',
+    termsPromptAccept: 'Accept',
+    termsPromptDecline: 'Renunță',
+    emailConfirmationSent:
+      'Verifică-ți emailul! Am trimis un link de confirmare a contului.',
+    errors: {
+      displayNameRequired: 'Numele afișat este obligatoriu',
+      termsRequired: 'Trebuie să accepți termenii și condițiile',
+      passwordTooShort: 'Parola trebuie să aibă cel puțin 6 caractere',
+      signUpFailed: 'Înregistrarea a eșuat. Încearcă din nou.',
+      emailAlreadyRegistered:
+        'Acest email este deja înregistrat. Încearcă să te autentifici.',
+      profileFailed: 'Salvarea profilului a eșuat. Încearcă din nou.',
+    },
+  },
+
+  // Reset password
+  resetPassword: {
+    header: 'Setează o parolă nouă',
+    newPasswordLabel: 'Parolă nouă',
+    confirmPasswordLabel: 'Confirmă parola',
+    submitButton: 'Schimbă parola',
+    success: 'Parola a fost schimbată cu succes!',
+    noSession:
+      'Nu ai o sesiune activă de resetare. Solicită un nou link.',
+    errors: {
+      passwordTooShort: 'Parola trebuie să aibă cel puțin 6 caractere',
+      passwordsMismatch: 'Parolele nu se potrivesc',
+      updateFailed: 'Schimbarea parolei a eșuat. Încearcă din nou.',
+      sessionExpired: 'Sesiunea a expirat. Solicită un nou link de resetare.',
+    },
+  },
+
   // Placeholder captions (dev-only, describes which story builds the real screen)
   placeholderCaptions: {
     issues: 'Placeholder — S06 will build the full issues list.',

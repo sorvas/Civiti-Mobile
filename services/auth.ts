@@ -121,8 +121,9 @@ function extractOAuthParams(url: string): {
   try {
     const queryCode = new URL(url).searchParams.get('code');
     if (queryCode) return { code: queryCode };
-  } catch {
+  } catch (e) {
     // Custom scheme URLs may not parse on all platforms — fall through to hash parsing
+    console.warn('[auth] URL parse fell through to hash parsing:', e);
   }
 
   // Implicit: tokens in hash fragment
@@ -180,8 +181,16 @@ export async function performOAuthSignIn(provider: 'google' | 'apple') {
   }
 }
 
-export function signUp(email: string, password: string) {
-  return supabase.auth.signUp({ email, password });
+export function signUp(
+  email: string,
+  password: string,
+  metadata?: Record<string, string>,
+) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: metadata ? { data: metadata } : undefined,
+  });
 }
 
 export function signOut() {
@@ -200,4 +209,8 @@ export function onAuthStateChange(
 
 export function resetPassword(email: string) {
   return supabase.auth.resetPasswordForEmail(email);
+}
+
+export function updatePassword(newPassword: string) {
+  return supabase.auth.updateUser({ password: newPassword });
 }
