@@ -28,8 +28,10 @@ export function LocationPreview({
     const url = Platform.select({
       ios: `maps:0,0?q=${label}@${latitude},${longitude}`,
       default: `geo:${latitude},${longitude}?q=${latitude},${longitude}(${label})`,
+    })!;
+    Linking.openURL(url).catch((err) => {
+      console.warn('[location] Failed to open maps URL:', url, err);
     });
-    Linking.openURL(url);
   }, [latitude, longitude, address]);
 
   return (

@@ -42,5 +42,6 @@ export function useComments(issueId: string, params?: UseCommentsParams) {
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
+    refetch: query.refetch,
   };
 }

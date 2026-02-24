@@ -28,11 +28,11 @@ export function useVote(issueId: string) {
       return { previous };
     },
 
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(detailKey, context.previous);
       }
-      console.warn('[vote] Failed to toggle vote');
+      console.warn('[vote] Failed to toggle vote for issue', issueId, err);
     },
 
     onSettled: () => {

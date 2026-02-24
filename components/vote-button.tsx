@@ -48,7 +48,7 @@ export function VoteButton({ issueId, hasVoted, voteCount }: VoteButtonProps) {
 
   const handlePress = useCallback(() => {
     requireAuth(() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       vote.mutate(hasVoted);
     });
   }, [requireAuth, vote, hasVoted]);

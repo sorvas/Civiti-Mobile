@@ -73,7 +73,7 @@ function TitleSection({ issue }: { issue: IssueDetailResponse }) {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="h1">{issue.title}</ThemedText>
+      <ThemedText type="h1">{issue.title ?? '—'}</ThemedText>
 
       <View style={styles.badgeRow}>
         {isValidIssueStatus(issue.status) ? (
@@ -170,11 +170,13 @@ function CommentsSection({ issueId }: { issueId: string }) {
   const textSecondary = useThemeColor({}, 'textSecondary');
   const accent = useThemeColor({}, 'accent');
 
-  const { comments, totalComments, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
-    useComments(issueId, {
-      sortBy: 'createdAt',
-      sortDescending: sortNewest,
-    });
+  const {
+    comments, totalComments, hasNextPage, fetchNextPage,
+    isFetchingNextPage, isLoading, isError, error: commentsError, refetch,
+  } = useComments(issueId, {
+    sortBy: 'createdAt',
+    sortDescending: sortNewest,
+  });
 
   const toggleSort = useCallback(() => {
     setSortNewest((prev) => !prev);
@@ -198,6 +200,8 @@ function CommentsSection({ issueId }: { issueId: string }) {
 
       {isLoading ? (
         <ActivityIndicator style={styles.commentLoader} />
+      ) : isError ? (
+        <ErrorState message={commentsError?.message} onRetry={refetch} />
       ) : comments.length === 0 ? (
         <ThemedText type="caption" style={{ color: textSecondary }}>
           {Localization.states.emptyComments}
@@ -308,8 +312,8 @@ export default function IssueDetailScreen() {
         message: `${issue.title ?? 'Issue'}\n${issue.description ?? ''}`,
         ...(Platform.OS === 'ios' ? { url: `civiti://issues/${issue.id}` } : {}),
       });
-    } catch {
-      // User cancelled or share failed — silent
+    } catch (err) {
+      console.warn('[share] Share failed for issue', issue.id, err);
     }
   }, [issue]);
 
