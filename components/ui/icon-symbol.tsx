@@ -36,6 +36,7 @@ const MAPPING = {
   'mappin.circle.fill': 'location-on',
   'plus.circle.fill': 'add-circle',
   'list.bullet': 'format-list-bulleted',
+  'map.fill': 'map',
   'doc.text.fill': 'description',
   // Misc
   'exclamationmark.triangle.fill': 'warning',

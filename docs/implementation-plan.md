@@ -15,7 +15,7 @@
 | S05 | [#5](https://github.com/sorvas/Civiti-Mobile/issues/5) | Navigation shell & tab bar | S04 | `Done` |
 | S06 | [#6](https://github.com/sorvas/Civiti-Mobile/issues/6) | Issues list — card view | S02,S03,S05 | `Done` |
 | S07 | [#7](https://github.com/sorvas/Civiti-Mobile/issues/7) | Issues list — filter sheet | S06 | `Done` |
-| S08 | [#8](https://github.com/sorvas/Civiti-Mobile/issues/8) | Issues list — map view | S06 | `pending` |
+| S08 | [#8](https://github.com/sorvas/Civiti-Mobile/issues/8) | Issues list — map view | S06 | `Done` |
 | S09 | [#9](https://github.com/sorvas/Civiti-Mobile/issues/9) | Issue detail screen | S06 | `pending` |
 | S10 | [#10](https://github.com/sorvas/Civiti-Mobile/issues/10) | Email campaign flow | S09 | `pending` |
 | S11 | [#11](https://github.com/sorvas/Civiti-Mobile/issues/11) | Login screen | S04,S05 | `pending` |

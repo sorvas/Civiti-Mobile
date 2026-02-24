@@ -40,6 +40,8 @@ export type IssueListResponse = {
   description: string | null;
   category: IssueCategory;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   urgency: UrgencyLevel;
   emailsSent: number;
   communityVotes: number;
