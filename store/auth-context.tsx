@@ -8,6 +8,7 @@ import {
 } from '@/services/auth';
 import type { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -72,8 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session) {
           callback();
         } else {
-          // TODO(S11): navigate to /(auth)/login instead of warning
-          console.warn('[auth] Action requires authentication');
+          try {
+            router.push('/login');
+          } catch (err) {
+            console.warn('[auth] requireAuth navigation failed:', err);
+          }
         }
       },
     }),

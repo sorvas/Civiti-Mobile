@@ -1,6 +1,7 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/constants/api';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 // --- Storage adapter ---
@@ -108,11 +109,79 @@ export function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export function signInWithOAuth(provider: 'google' | 'apple') {
-  return supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: 'civitimobile://auth/callback' },
-  });
+const REDIRECT_URI = 'civitimobile://auth/callback';
+
+/** Extract OAuth params from both PKCE (?code=) and implicit (#access_token=) redirects. */
+function extractOAuthParams(url: string): {
+  code?: string;
+  accessToken?: string;
+  refreshToken?: string;
+} {
+  // PKCE: code is in query params
+  try {
+    const queryCode = new URL(url).searchParams.get('code');
+    if (queryCode) return { code: queryCode };
+  } catch {
+    // Custom scheme URLs may not parse on all platforms — fall through to hash parsing
+  }
+
+  // Implicit: tokens in hash fragment
+  const hash = url.split('#')[1];
+  if (!hash) return {};
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get('access_token') ?? undefined;
+  const refreshToken = params.get('refresh_token') ?? undefined;
+  return { accessToken, refreshToken };
+}
+
+/**
+ * Opens a browser-based OAuth flow and exchanges the result for a Supabase session.
+ * Uses SFAuthenticationSession (iOS) / Chrome Custom Tabs (Android).
+ */
+export async function performOAuthSignIn(provider: 'google' | 'apple') {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: REDIRECT_URI,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error || !data.url) {
+      return { data: null, error: error ?? new Error('No auth URL returned') };
+    }
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+
+    if (result.type !== 'success') {
+      // User cancelled or dismissed — not an error
+      return { data: null, error: null };
+    }
+
+    const params = extractOAuthParams(result.url);
+
+    if (params.code) {
+      const exchange = await supabase.auth.exchangeCodeForSession(params.code);
+      return { data: exchange.data?.session ?? null, error: exchange.error };
+    }
+
+    if (params.accessToken && params.refreshToken) {
+      const sessionResult = await supabase.auth.setSession({
+        access_token: params.accessToken,
+        refresh_token: params.refreshToken,
+      });
+      return { data: sessionResult.data?.session ?? null, error: sessionResult.error };
+    }
+
+    return { data: null, error: new Error('No auth tokens in redirect URL') };
+  } catch (err) {
+    console.warn(`[auth] OAuth ${provider} sign-in failed:`, err);
+    return {
+      data: null,
+      error: err instanceof Error ? err : new Error('OAuth sign-in failed'),
+    };
+  }
 }
 
 export function signUp(email: string, password: string) {
