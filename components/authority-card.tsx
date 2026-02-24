@@ -11,18 +11,18 @@ import type { IssueAuthorityResponse } from '@/types/issues';
 
 type AuthorityCardProps = {
   authority: IssueAuthorityResponse;
+  onSendEmail: (authority: IssueAuthorityResponse) => void;
 };
 
-export function AuthorityCard({ authority }: AuthorityCardProps) {
+export function AuthorityCard({ authority, onSendEmail }: AuthorityCardProps) {
   const surface = useThemeColor({}, 'surfaceElevated');
   const border = useThemeColor({}, 'border');
   const textSecondary = useThemeColor({}, 'textSecondary');
   const accent = useThemeColor({}, 'accent');
 
   const handleEmailPress = useCallback(() => {
-    // TODO(S10): Send email flow
-    console.log('[S10] Send email:', authority.email);
-  }, [authority.email]);
+    onSendEmail(authority);
+  }, [onSendEmail, authority]);
 
   return (
     <View
@@ -52,6 +52,7 @@ export function AuthorityCard({ authority }: AuthorityCardProps) {
       <Pressable
         onPress={handleEmailPress}
         disabled={!authority.email}
+        hitSlop={{ top: 4, bottom: 4 }}
         style={({ pressed }) => [
           styles.emailButton,
           {
