@@ -47,7 +47,7 @@ export function buildMailto({ authority, issue, userName }: BuildMailtoParams): 
 
   lines.push(
     '',
-    `Această problemă a fost raportată pe ${createdDate} și a fost deja semnalată de ${issue.emailsSent} cetățeni.`,
+    `Această problemă a fost raportată pe ${createdDate}${issue.emailsSent > 0 ? ` și a fost deja semnalată de ${issue.emailsSent} cetățeni` : ''}.`,
     '',
     'Vă rog să interveniți pentru rezolvarea acestei situații.',
     '',
