@@ -167,11 +167,7 @@ export async function performOAuthSignIn(provider: 'google' | 'apple') {
     }
 
     if (params.accessToken) {
-      const sessionResult = await supabase.auth.setSession({
-        access_token: params.accessToken,
-        refresh_token: params.refreshToken ?? '',
-      });
-      return { data: sessionResult.data?.session ?? null, error: sessionResult.error };
+      return { data: null, error: new Error('Implicit flow not supported; expected PKCE code') };
     }
 
     return { data: null, error: new Error('No auth tokens in redirect URL') };
