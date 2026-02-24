@@ -45,6 +45,9 @@ const MAPPING = {
   'clock.fill': 'schedule',
   'text.bubble.fill': 'chat-bubble',
   'person.circle.fill': 'account-circle',
+  // Forms
+  'checkmark': 'check',
+  'chevron.down': 'expand-more',
   // Misc
   'exclamationmark.triangle.fill': 'warning',
   'arrow.clockwise': 'refresh',

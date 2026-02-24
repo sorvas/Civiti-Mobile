@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import {
   StyleSheet,
   TextInput as RNTextInput,
@@ -16,7 +16,8 @@ type TextInputProps = RNTextInputProps & {
   error?: string;
 };
 
-export function TextInput({ label, error, style, onFocus, onBlur, ...rest }: TextInputProps) {
+export const TextInput = forwardRef<RNTextInput, TextInputProps>(
+  function TextInput({ label, error, style, onFocus, onBlur, ...rest }, ref) {
   const [isFocused, setIsFocused] = useState(false);
 
   const textColor = useThemeColor({}, 'text');
@@ -37,6 +38,7 @@ export function TextInput({ label, error, style, onFocus, onBlur, ...rest }: Tex
         </ThemedText>
       ) : null}
       <RNTextInput
+        ref={ref}
         style={[
           styles.input,
           { color: textColor, backgroundColor, borderColor },
@@ -60,7 +62,7 @@ export function TextInput({ label, error, style, onFocus, onBlur, ...rest }: Tex
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -73,6 +75,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderWidth: 1,
     borderRadius: BorderRadius.sm,
+    borderCurve: 'continuous',
     paddingHorizontal: Spacing.md,
     fontSize: 16,
     fontFamily: Fonts.regular,
