@@ -383,15 +383,17 @@ export default function IssueDetailScreen() {
           issue,
           userName: profile?.displayName ?? null,
         });
-        emailFlowActiveRef.current = true;
-        Linking.openURL(mailto).catch((err) => {
-          emailFlowActiveRef.current = false;
-          console.warn('[email] Failed to open mailto link for issue', issue.id, err);
-          toast({
-            title: Localization.email.openFailed,
-            preset: 'error',
+        Linking.openURL(mailto)
+          .then(() => {
+            emailFlowActiveRef.current = true;
+          })
+          .catch((err) => {
+            console.warn('[email] Failed to open mailto link for issue', issue.id, err);
+            toast({
+              title: Localization.email.openFailed,
+              preset: 'error',
+            });
           });
-        });
       });
     },
     [issue, requireAuth, profile?.displayName],
