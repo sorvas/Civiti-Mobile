@@ -93,6 +93,8 @@ export const Localization = {
   // Screen titles
   screens: {
     login: 'Autentificare',
+    register: 'Înregistrare',
+    forgotPassword: 'Resetare parolă',
   },
 
   // Filter sheet
@@ -174,6 +176,34 @@ export const Localization = {
     sendEmail: 'Trimite email',
     noEmail: 'Email indisponibil',
     defaultName: 'Autoritate',
+  },
+
+  // Auth
+  auth: {
+    header: 'Conectează-te pentru a continua',
+    googleSignIn: 'Continuă cu Google',
+    appleSignIn: 'Continuă cu Apple',
+    emailLabel: 'Email',
+    passwordLabel: 'Parolă',
+    submitButton: 'Autentificare',
+    noAccount: 'Nu ai cont?',
+    register: 'Înregistrează-te',
+    forgotPassword: 'Ai uitat parola?',
+    orDivider: 'sau',
+    errors: {
+      invalidCredentials: 'Email sau parolă incorectă',
+      oauthFailed: 'Autentificarea a eșuat. Încearcă din nou.',
+      emailRequired: 'Emailul este obligatoriu',
+      passwordRequired: 'Parola este obligatorie',
+      invalidEmail: 'Adresa de email nu este validă',
+    },
+    forgotPasswordTitle: 'Resetare parolă',
+    forgotPasswordDescription:
+      'Introdu adresa de email și îți vom trimite un link de resetare.',
+    forgotPasswordSubmit: 'Trimite linkul',
+    forgotPasswordSuccess:
+      'Verifică-ți emailul! Am trimis un link de resetare a parolei.',
+    registerPlaceholder: 'Înregistrarea va fi disponibilă în curând.',
   },
 
   // Placeholder captions (dev-only, describes which story builds the real screen)
