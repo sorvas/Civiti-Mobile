@@ -79,6 +79,7 @@ export const Localization = {
     close: 'Închide',
     delete: 'Șterge',
     edit: 'Editează',
+    back: 'Înapoi',
   },
 
   // State messages
@@ -124,6 +125,46 @@ export const Localization = {
     oldest: 'Cele mai vechi',
     mostSupported: 'Cele mai susținute',
     mostUrgent: 'Cele mai urgente',
+  },
+
+  // Issue detail
+  detail: {
+    description: 'Descriere',
+    desiredOutcome: 'Rezultat dorit',
+    communityImpact: 'Impact asupra comunității',
+    authorities: 'Autorități contactate',
+    location: 'Locație',
+    submittedBy: 'Trimisă de',
+    emailsSent: 'Emailuri trimise',
+    votes: 'Voturi',
+    authoritiesCount: 'Autorități',
+    share: 'Distribuie',
+    openInMaps: 'Deschide în hărți',
+    sendEmail: 'Trimite Email',
+    scrollToAuthorities: 'Vezi autoritățile',
+    photoAlt: 'Fotografia problemei',
+    vote: 'Votează',
+    voteRemove: 'Retrage votul',
+    voteCount: 'voturi',
+  },
+
+  // Comments
+  comments: {
+    title: 'Comentarii',
+    deleted: '[Comentariu șters]',
+    reply: 'răspuns',
+    replies: 'răspunsuri',
+    loadMore: 'Încarcă mai multe',
+    sortNewest: 'Cele mai noi',
+    sortOldest: 'Cele mai vechi',
+    level: 'Niv.',
+  },
+
+  // Authority
+  authority: {
+    sendEmail: 'Trimite email',
+    noEmail: 'Email indisponibil',
+    defaultName: 'Autoritate',
   },
 
   // Placeholder captions (dev-only, describes which story builds the real screen)

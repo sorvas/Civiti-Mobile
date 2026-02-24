@@ -32,12 +32,19 @@ const MAPPING = {
   // Actions
   'line.3.horizontal.decrease.circle': 'filter-list',
   'heart.fill': 'favorite',
+  'heart': 'favorite-border',
   'envelope.fill': 'email',
   'mappin.circle.fill': 'location-on',
   'plus.circle.fill': 'add-circle',
   'list.bullet': 'format-list-bulleted',
   'map.fill': 'map',
   'doc.text.fill': 'description',
+  'square.and.arrow.up': 'share',
+  // Detail screen
+  'chevron.left': 'arrow-back',
+  'clock.fill': 'schedule',
+  'text.bubble.fill': 'chat-bubble',
+  'person.circle.fill': 'account-circle',
   // Misc
   'exclamationmark.triangle.fill': 'warning',
   'arrow.clockwise': 'refresh',
