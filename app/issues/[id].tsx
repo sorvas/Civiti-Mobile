@@ -35,6 +35,10 @@ import { formatTimeAgo } from '@/utils/format-time-ago';
 
 const NOOP = () => {};
 
+function isValidIssueStatus(s: string): s is (typeof IssueStatus)[keyof typeof IssueStatus] {
+  return (Object.values(IssueStatus) as string[]).includes(s);
+}
+
 // ─── Sub-components ─────────────────────────────────────────────
 
 function DetailHeader({ onBack, onShare }: { onBack: () => void; onShare: () => void }) {
@@ -66,15 +70,14 @@ function DetailHeader({ onBack, onShare }: { onBack: () => void; onShare: () => 
 
 function TitleSection({ issue }: { issue: IssueDetailResponse }) {
   const textSecondary = useThemeColor({}, 'textSecondary');
-  const validStatus = Object.values(IssueStatus).includes(issue.status as typeof IssueStatus[keyof typeof IssueStatus]);
 
   return (
     <View style={styles.section}>
       <ThemedText type="h1">{issue.title}</ThemedText>
 
       <View style={styles.badgeRow}>
-        {validStatus ? (
-          <StatusBadge status={issue.status as typeof IssueStatus[keyof typeof IssueStatus]} />
+        {isValidIssueStatus(issue.status) ? (
+          <StatusBadge status={issue.status} />
         ) : null}
         <CategoryBadge category={issue.category} />
         <UrgencyBadge level={issue.urgency} />
