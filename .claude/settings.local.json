@@ -14,7 +14,10 @@
       "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git status -u)",
       "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git reset HEAD .claude/settings.local.json)",
       "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git reset HEAD)",
-      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git add services/auth.ts store/auth-context.tsx app/_layout.tsx constants/api.ts services/api-client.ts docs/implementation-plan.md package.json package-lock.json app.json)"
+      "Bash(cd \"/mnt/g/Repos Personal/Civiti-Mobile\" && git add services/auth.ts store/auth-context.tsx app/_layout.tsx constants/api.ts services/api-client.ts docs/implementation-plan.md package.json package-lock.json app.json)",
+      "mcp__obsidian-mcp-tools__fetch",
+      "Bash(python3 -c \":*)",
+      "Bash(done)"
     ]
   }
 }
