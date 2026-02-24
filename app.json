@@ -52,6 +52,13 @@
           "photosPermission": "Civiti are nevoie de acces la galerie pentru a selecta fotografii.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
       ]
     ],
     "experiments": {
