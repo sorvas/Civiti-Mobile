@@ -160,6 +160,15 @@ export const Localization = {
     level: 'Niv.',
   },
 
+  // Email campaign
+  email: {
+    promptTitle: 'Ai trimis emailul?',
+    promptYes: 'Da, am trimis',
+    promptNo: 'Nu',
+    sentSuccess: 'Email confirmat! +10 puncte',
+    openFailed: 'Nu s-a putut deschide aplicația de email',
+  },
+
   // Authority
   authority: {
     sendEmail: 'Trimite email',

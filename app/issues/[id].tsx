@@ -1,7 +1,10 @@
+import { toast } from 'burnt';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -13,12 +16,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorityCard } from '@/components/authority-card';
 import { CommentItem } from '@/components/comment-item';
+import { EmailPrompt } from '@/components/email-prompt';
 import { ErrorState } from '@/components/error-state';
 import { LocationPreview } from '@/components/location-preview';
 import { PhotoGallery } from '@/components/photo-gallery';
 import { ThemedText } from '@/components/themed-text';
 import { VoteButton } from '@/components/vote-button';
 import { Button } from '@/components/ui/button';
+import type { BottomSheetMethods } from '@/components/ui/bottom-sheet';
 import { CategoryBadge } from '@/components/ui/category-badge';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -28,9 +33,13 @@ import { Localization } from '@/constants/localization';
 import { BorderRadius, Spacing } from '@/constants/spacing';
 import { BrandColors } from '@/constants/theme';
 import { useComments } from '@/hooks/use-comments';
+import { useEmailTracking } from '@/hooks/use-email-tracking';
 import { useIssueDetail } from '@/hooks/use-issue-detail';
+import { useProfile } from '@/hooks/use-profile';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuth } from '@/store/auth-context';
 import type { IssueAuthorityResponse, IssueDetailResponse } from '@/types/issues';
+import { buildMailto } from '@/utils/build-mailto';
 import { formatTimeAgo } from '@/utils/format-time-ago';
 
 const NOOP = () => {};
@@ -151,14 +160,20 @@ function SectionBlock({
 
 function AuthoritiesSection({
   authorities,
+  onSendEmail,
 }: {
   authorities: IssueAuthorityResponse[];
+  onSendEmail: (authority: IssueAuthorityResponse) => void;
 }) {
   return (
     <SectionBlock title={Localization.detail.authorities}>
       <View style={styles.authorityList}>
         {authorities.map((auth, index) => (
-          <AuthorityCard key={auth.authorityId ?? `custom-${index}`} authority={auth} />
+          <AuthorityCard
+            key={auth.authorityId ?? `custom-${index}`}
+            authority={auth}
+            onSendEmail={onSendEmail}
+          />
         ))}
       </View>
     </SectionBlock>
@@ -237,12 +252,14 @@ function StickyBottomBar({
   issueId,
   hasVoted,
   voteCount,
-  onScrollToAuthorities,
+  onEmailCta,
+  emailDisabled,
 }: {
   issueId: string;
   hasVoted: boolean;
   voteCount: number;
-  onScrollToAuthorities: () => void;
+  onEmailCta: () => void;
+  emailDisabled: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const surface = useThemeColor({}, 'surface');
@@ -263,7 +280,8 @@ function StickyBottomBar({
       <Button
         title={Localization.detail.sendEmail}
         variant="primary"
-        onPress={onScrollToAuthorities}
+        onPress={onEmailCta}
+        disabled={emailDisabled}
         style={styles.ctaButton}
       />
     </View>
@@ -298,7 +316,31 @@ export default function IssueDetailScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const authoritiesYRef = useRef(0);
 
+  const { requireAuth } = useAuth();
   const { data: issue, isLoading, isError, error, refetch } = useIssueDetail(id);
+  const { data: profile } = useProfile();
+  const { mutate: trackEmailSent } = useEmailTracking(id);
+
+  // Email flow state
+  const emailPromptRef = useRef<BottomSheetMethods>(null);
+  const emailFlowActiveRef = useRef(false);
+
+  // Detect return from email client via AppState
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && emailFlowActiveRef.current) {
+        emailFlowActiveRef.current = false;
+        timeoutId = setTimeout(() => {
+          emailPromptRef.current?.snapToIndex(0);
+        }, 300);
+      }
+    });
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      subscription.remove();
+    };
+  }, []);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -331,6 +373,54 @@ export default function IssueDetailScreen() {
     [],
   );
 
+  // Email flow: triggered from authority card or bottom bar CTA
+  const handleSendEmail = useCallback(
+    (authority: IssueAuthorityResponse) => {
+      if (!issue || !authority.email) return;
+      requireAuth(() => {
+        const mailto = buildMailto({
+          authority,
+          issue,
+          userName: profile?.displayName ?? null,
+        });
+        Linking.openURL(mailto)
+          .then(() => {
+            emailFlowActiveRef.current = true;
+          })
+          .catch((err) => {
+            console.warn('[email] Failed to open mailto link for issue', issue.id, err);
+            toast({
+              title: Localization.email.openFailed,
+              preset: 'error',
+            });
+          });
+      });
+    },
+    [issue, requireAuth, profile?.displayName],
+  );
+
+  // Bottom bar CTA: single authority → send directly, multiple → scroll to section
+  const handleEmailCta = useCallback(() => {
+    if (!issue) return;
+    const authorities = issue.authorities ?? [];
+    const withEmail = authorities.filter((a) => a.email);
+    if (withEmail.length === 0) return;
+    if (withEmail.length === 1) {
+      handleSendEmail(withEmail[0]);
+    } else {
+      handleScrollToAuthorities();
+    }
+  }, [issue, handleSendEmail, handleScrollToAuthorities]);
+
+  const handleEmailConfirm = useCallback(() => {
+    emailPromptRef.current?.close();
+    trackEmailSent();
+  }, [trackEmailSent]);
+
+  const handleEmailDismiss = useCallback(() => {
+    emailPromptRef.current?.close();
+  }, []);
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: background }]}>
@@ -359,6 +449,7 @@ export default function IssueDetailScreen() {
   const photos = issue.photos ?? [];
   const authorities = issue.authorities ?? [];
   const hasVoted = issue.hasVoted ?? false;
+  const hasAuthorityWithEmail = authorities.some((a) => a.email);
 
   return (
     <View style={[styles.container, { backgroundColor: background }]}>
@@ -412,7 +503,10 @@ export default function IssueDetailScreen() {
         {/* Authorities */}
         {authorities.length > 0 ? (
           <View onLayout={handleAuthoritiesLayout}>
-            <AuthoritiesSection authorities={authorities} />
+            <AuthoritiesSection
+              authorities={authorities}
+              onSendEmail={handleSendEmail}
+            />
           </View>
         ) : null}
 
@@ -428,7 +522,15 @@ export default function IssueDetailScreen() {
         issueId={issue.id}
         hasVoted={hasVoted}
         voteCount={issue.communityVotes}
-        onScrollToAuthorities={handleScrollToAuthorities}
+        onEmailCta={handleEmailCta}
+        emailDisabled={!hasAuthorityWithEmail}
+      />
+
+      {/* Email Confirmation Prompt */}
+      <EmailPrompt
+        ref={emailPromptRef}
+        onConfirm={handleEmailConfirm}
+        onDismiss={handleEmailDismiss}
       />
     </View>
   );
