@@ -45,6 +45,9 @@ const MAPPING = {
   'clock.fill': 'schedule',
   'text.bubble.fill': 'chat-bubble',
   'person.circle.fill': 'account-circle',
+  // Camera/Photos
+  'camera.fill': 'photo-camera',
+  'photo.on.rectangle': 'photo-library',
   // Forms
   'checkmark': 'check',
   'chevron.down': 'expand-more',

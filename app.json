@@ -44,7 +44,15 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Civiti are nevoie de acces la cameră pentru a fotografia problemele comunitare.",
+          "photosPermission": "Civiti are nevoie de acces la galerie pentru a selecta fotografii.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
