@@ -3,6 +3,7 @@ import { supabase } from '@/services/auth';
 import { MAX_PHOTOS, useWizard } from '@/store/wizard-context';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useCallback, useState } from 'react';
 
 const MAX_WIDTH = 1920;
@@ -59,13 +60,18 @@ export function usePhotoUpload() {
       let hadError = false;
       try {
         for (const asset of assets) {
+          let compressed: string | undefined;
           try {
-            const compressed = await compressImage(asset.uri, asset.width);
+            compressed = await compressImage(asset.uri, asset.width);
             const publicUrl = await uploadToStorage(compressed);
             addPhotoUrl(publicUrl);
           } catch (err) {
             console.warn('[photo-upload] Upload failed for asset:', err);
             hadError = true;
+          } finally {
+            if (compressed) {
+              FileSystem.deleteAsync(compressed, { idempotent: true }).catch(() => {});
+            }
           }
         }
         if (hadError) {
@@ -130,6 +136,12 @@ export function usePhotoUpload() {
   const removePhoto = useCallback(
     (url: string) => {
       removePhotoUrl(url);
+      const match = url.match(/\/object\/public\/[^/]+\/(.+)$/);
+      if (match) {
+        supabase.storage.from(BUCKET).remove([match[1]]).catch((err) => {
+          console.warn('[photo-upload] Failed to delete from storage:', err);
+        });
+      }
     },
     [removePhotoUrl],
   );

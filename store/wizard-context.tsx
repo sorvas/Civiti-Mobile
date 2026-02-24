@@ -2,7 +2,7 @@ import type { IssueCategory } from '@/constants/enums';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 7;
 
 type WizardContextValue = {
   category: IssueCategory | null;
