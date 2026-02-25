@@ -66,8 +66,7 @@ export default function CreateStep4() {
       if (isSelected) {
         setAuthorities(authorities.filter((a) => a.authorityId !== id));
       } else {
-        // Store display name/email for the review screen; server ignores
-        // these for predefined authorities and resolves from authorityId
+        // Store display name/email for the review screen preview
         setAuthorities([
           ...authorities,
           { authorityId: id, customName: name, customEmail: email },

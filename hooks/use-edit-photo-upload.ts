@@ -6,7 +6,7 @@ import {
   MAX_FILE_SIZE,
   uploadToStorage,
 } from '@/utils/photo-upload';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useState } from 'react';
 

@@ -83,7 +83,13 @@ export default function CreateStep5() {
       latitude: wizard.latitude,
       longitude: wizard.longitude,
       urgency: wizard.urgency,
-      authorities: wizard.authorities.length > 0 ? wizard.authorities : null,
+      authorities: wizard.authorities.length > 0
+        ? wizard.authorities.map((a) =>
+            a.authorityId
+              ? { authorityId: a.authorityId, customName: null, customEmail: null }
+              : a,
+          )
+        : null,
       desiredOutcome: wizard.desiredOutcome.trim() || null,
       communityImpact: wizard.communityImpact.trim() || null,
       photoUrls: wizard.photoUrls.length > 0 ? wizard.photoUrls : null,
@@ -97,7 +103,11 @@ export default function CreateStep5() {
         router.replace('/create/success');
       },
       onError: (error) => {
-        console.warn('[createIssue] Failed:', error);
+        if (error instanceof ApiError) {
+          console.warn(`[createIssue] Failed: ${error.status} ${error.message}`, error.requestId);
+        } else {
+          console.warn('[createIssue] Failed:', error);
+        }
         if (error instanceof AuthError || (error instanceof ApiError && error.status === 401)) {
           Alert.alert(Localization.errors.noPermission);
           router.replace('/login');
