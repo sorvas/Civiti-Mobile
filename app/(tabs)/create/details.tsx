@@ -328,7 +328,7 @@ export default function CreateStep3() {
         <Button
           title={Localization.wizard.next}
           onPress={handleNext}
-          disabled={false}
+          disabled={!isFormValid}
         />
       </View>
     </ThemedView>
