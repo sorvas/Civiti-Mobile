@@ -149,6 +149,7 @@ export default function CreateStep3() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         >
           {/* Back button */}
           <Pressable
@@ -207,7 +208,7 @@ export default function CreateStep3() {
 
           {/* AI Enhance */}
           <Button
-            variant="ghost"
+            variant="secondary"
             title={isEnhancing ? Localization.wizard.enhancing : Localization.wizard.enhanceWithAI}
             onPress={handleEnhance}
             disabled={!canEnhance}
