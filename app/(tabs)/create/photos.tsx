@@ -39,8 +39,7 @@ export default function CreateStep2() {
   const atLimit = remainingSlots <= 0;
 
   const handleNext = () => {
-    // Placeholder — S14 will wire navigation to Step 3
-    // router.push('/create/details');
+    router.push('/create/details');
   };
 
   return (

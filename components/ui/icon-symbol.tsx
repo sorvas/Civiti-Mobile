@@ -51,6 +51,13 @@ const MAPPING = {
   // Forms
   'checkmark': 'check',
   'chevron.down': 'expand-more',
+  // Wizard / Create
+  'wand.and.stars': 'auto-awesome',
+  'plus': 'add',
+  'checkmark.circle.fill': 'check-circle',
+  'circle': 'radio-button-unchecked',
+  'xmark': 'close',
+  'mappin.and.ellipse': 'place',
   // Misc
   'exclamationmark.triangle.fill': 'warning',
   'arrow.clockwise': 'refresh',
