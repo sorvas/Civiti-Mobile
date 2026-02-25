@@ -1,51 +1,19 @@
 import { Localization } from '@/constants/localization';
-import { supabase } from '@/services/auth';
+import { useAuth } from '@/store/auth-context';
 import { MAX_PHOTOS, useWizard } from '@/store/wizard-context';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import * as ImagePicker from 'expo-image-picker';
+import {
+  compressImage,
+  deleteFromStorage,
+  MAX_FILE_SIZE,
+  uploadToStorage,
+} from '@/utils/photo-upload';
 import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useState } from 'react';
-
-const MAX_WIDTH = 1920;
-const JPEG_QUALITY = 0.8;
-const BUCKET = 'issue-photos';
-
-async function compressImage(uri: string, originalWidth?: number): Promise<string> {
-  const manipulator = ImageManipulator.manipulate(uri);
-  const needsResize = originalWidth !== undefined && originalWidth > MAX_WIDTH;
-  const ref = needsResize
-    ? await manipulator.resize({ width: MAX_WIDTH }).renderAsync()
-    : await manipulator.renderAsync();
-  const result = await ref.saveAsync({
-    compress: JPEG_QUALITY,
-    format: SaveFormat.JPEG,
-  });
-  return result.uri;
-}
-
-async function uploadToStorage(uri: string): Promise<string> {
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const filePath = `uploads/${fileName}`;
-
-  const response = await fetch(uri);
-  if (!response.ok) {
-    throw new Error(`Failed to read image file (status ${response.status})`);
-  }
-  const blob = await response.blob();
-
-  const { error } = await supabase.storage.from(BUCKET).upload(filePath, blob, {
-    contentType: 'image/jpeg',
-    upsert: false,
-  });
-
-  if (error) throw error;
-
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
-  return data.publicUrl;
-}
 
 export function usePhotoUpload() {
   const { photoUrls, addPhotoUrl, removePhotoUrl } = useWizard();
+  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +23,10 @@ export function usePhotoUpload() {
 
   const processAndUpload = useCallback(
     async (assets: ImagePicker.ImagePickerAsset[]) => {
+      if (!user) {
+        setError(Localization.errors.noPermission);
+        return;
+      }
       setError(null);
       setIsUploading(true);
       let hadError = false;
@@ -62,8 +34,12 @@ export function usePhotoUpload() {
         for (const asset of assets) {
           let compressed: string | undefined;
           try {
-            compressed = await compressImage(asset.uri, asset.width);
-            const publicUrl = await uploadToStorage(compressed);
+            if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE) {
+              throw new Error('File exceeds 10MB limit');
+            }
+
+            compressed = await compressImage(asset.uri, asset.width, asset.fileSize ?? undefined);
+            const publicUrl = await uploadToStorage(compressed, user.id);
             addPhotoUrl(publicUrl);
           } catch (err) {
             console.warn('[photo-upload] Upload failed for asset:', err);
@@ -81,7 +57,7 @@ export function usePhotoUpload() {
         setIsUploading(false);
       }
     },
-    [addPhotoUrl],
+    [addPhotoUrl, user],
   );
 
   const pickFromCamera = useCallback(async () => {
@@ -136,12 +112,7 @@ export function usePhotoUpload() {
   const removePhoto = useCallback(
     (url: string) => {
       removePhotoUrl(url);
-      const match = url.match(/\/object\/public\/[^/]+\/(.+)$/);
-      if (match) {
-        supabase.storage.from(BUCKET).remove([match[1]]).catch((err) => {
-          console.warn('[photo-upload] Failed to delete from storage:', err);
-        });
-      }
+      deleteFromStorage(url);
     },
     [removePhotoUrl],
   );
