@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { UrgencyLevel } from '@/constants/enums';
 import { Localization } from '@/constants/localization';
 import { BorderRadius, Spacing } from '@/constants/spacing';
-import { Colors } from '@/constants/theme';
+import { Colors, UrgencyColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type UrgencySelectorProps = {
@@ -12,15 +12,17 @@ type UrgencySelectorProps = {
   onValueChange: (value: UrgencyLevel) => void;
 };
 
-const URGENCY_STYLES: Record<
-  UrgencyLevel,
-  { fg: string; bg: { light: string; dark: string } }
-> = {
-  Low: { fg: '#28A745', bg: { light: '#DCFCE7', dark: '#14532D' } },
-  Medium: { fg: '#F59E0B', bg: { light: '#FEF3C7', dark: 'rgba(245, 158, 11, 0.15)' } },
-  High: { fg: '#F97316', bg: { light: '#FFEDD5', dark: 'rgba(249, 115, 22, 0.15)' } },
-  Urgent: { fg: '#DC3545', bg: { light: '#FFF1F0', dark: '#450A0A' } },
-};
+type ColorScheme = 'light' | 'dark';
+
+const getUrgencyStyle = (level: UrgencyLevel, scheme: ColorScheme) => ({
+  fg: UrgencyColors[level],
+  bg: {
+    Low: Colors[scheme].successMuted,
+    Medium: Colors[scheme].warningMuted,
+    High: Colors[scheme].cautionMuted,
+    Urgent: Colors[scheme].errorMuted,
+  }[level],
+});
 
 const LEVELS = [
   UrgencyLevel.Low,
@@ -45,8 +47,8 @@ export function UrgencySelector({ value, onValueChange }: UrgencySelectorProps) 
     >
       {LEVELS.map((level) => {
         const isSelected = level === value;
-        const urgencyColors = URGENCY_STYLES[level];
-        const bgColor = isSelected ? urgencyColors.bg[scheme] : 'transparent';
+        const urgencyStyle = getUrgencyStyle(level, scheme);
+        const bgColor = isSelected ? urgencyStyle.bg : 'transparent';
 
         return (
           <Pressable
@@ -63,7 +65,7 @@ export function UrgencySelector({ value, onValueChange }: UrgencySelectorProps) 
             <ThemedText
               type="label"
               style={{
-                color: isSelected ? urgencyColors.fg : Colors[scheme].textSecondary,
+                color: isSelected ? urgencyStyle.fg : Colors[scheme].textSecondary,
               }}
             >
               {Localization.urgency[level]}
