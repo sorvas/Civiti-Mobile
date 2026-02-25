@@ -1,5 +1,6 @@
 import { supabase } from '@/services/auth';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { File as ExpoFile } from 'expo-file-system';
 
 export const MAX_WIDTH = 1920;
 export const JPEG_QUALITY = 0.85;
@@ -59,11 +60,14 @@ export async function uploadToStorage(
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
   const filePath = `${userId}/${fileName}`;
 
-  const response = await fetch(uri);
-  if (!response.ok) {
-    throw new Error(`Failed to read image file (status ${response.status})`);
+  // Read file as ArrayBuffer via expo-file-system's native File class.
+  // The fetch(localUri).blob() pattern produces 0-byte blobs on some RN platforms.
+  const file = new ExpoFile(uri);
+  const buffer = await file.arrayBuffer();
+
+  if (buffer.byteLength === 0) {
+    throw new Error('Compressed image file is empty');
   }
-  const blob = await response.blob();
 
   let lastError: unknown;
 
@@ -74,7 +78,7 @@ export async function uploadToStorage(
     }
 
     try {
-      const { error } = await supabase.storage.from(BUCKET).upload(filePath, blob, {
+      const { error } = await supabase.storage.from(BUCKET).upload(filePath, buffer, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: true,
