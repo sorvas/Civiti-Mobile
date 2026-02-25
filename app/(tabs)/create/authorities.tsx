@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -62,14 +61,16 @@ export default function CreateStep4() {
   );
 
   const toggleAuthority = useCallback(
-    (id: string) => {
+    (id: string, name: string | null, email: string | null) => {
       const isSelected = authorities.some((a) => a.authorityId === id);
       if (isSelected) {
         setAuthorities(authorities.filter((a) => a.authorityId !== id));
       } else {
+        // Store display name/email for the review screen; server ignores
+        // these for predefined authorities and resolves from authorityId
         setAuthorities([
           ...authorities,
-          { authorityId: id, customName: null, customEmail: null },
+          { authorityId: id, customName: name, customEmail: email },
         ]);
       }
     },
@@ -122,8 +123,7 @@ export default function CreateStep4() {
 
   const handleNext = useCallback(() => {
     // Authorities are optional — always allow proceeding
-    // TODO: S15 will wire to router.push('/create/review')
-    Alert.alert('Pasul 5 — Revizuire', 'Ecranul de revizuire va fi disponibil în curând.');
+    router.push('/create/review');
   }, []);
 
   const totalSelected = authorities.length;
@@ -179,7 +179,7 @@ export default function CreateStep4() {
                   name={auth.name ?? Localization.authority.defaultName}
                   email={auth.email}
                   isSelected={selectedIds.has(auth.id)}
-                  onToggle={() => toggleAuthority(auth.id)}
+                  onToggle={() => toggleAuthority(auth.id, auth.name, auth.email)}
                 />
               ))}
             </View>

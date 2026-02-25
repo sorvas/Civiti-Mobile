@@ -14,6 +14,11 @@ export default function CreateLayout() {
         <Stack.Screen name="photos" />
         <Stack.Screen name="details" />
         <Stack.Screen name="authorities" />
+        <Stack.Screen name="review" />
+        <Stack.Screen
+          name="success"
+          options={{ gestureEnabled: false, animation: 'fade' }}
+        />
         <Stack.Screen
           name="location-picker"
           options={{
