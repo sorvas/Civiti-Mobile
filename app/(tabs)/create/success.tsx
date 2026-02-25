@@ -17,12 +17,19 @@ import { Localization } from '@/constants/localization';
 import { Spacing } from '@/constants/spacing';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWizard } from '@/store/wizard-context';
 
 const CHECK_SIZE = 80;
 
 export default function CreateSuccess() {
   const scheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
+  const wizard = useWizard();
+
+  // Reset wizard state now that we've navigated away from review
+  useEffect(() => {
+    wizard.reset();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Animated entrance
   const scale = useSharedValue(0);

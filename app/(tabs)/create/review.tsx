@@ -94,9 +94,7 @@ export default function CreateStep5() {
         AsyncStorage.removeItem(DRAFT_KEY).catch((err: unknown) => {
           console.warn('[review] Failed to remove draft after submit:', err);
         });
-        // Navigate first, then reset — prevents flash of empty state on review screen
         router.replace('/create/success');
-        setTimeout(() => wizard.reset(), 0);
       },
       onError: (error) => {
         console.warn('[createIssue] Failed:', error);
