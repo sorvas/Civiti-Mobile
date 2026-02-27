@@ -52,7 +52,10 @@ export function denormalizeParams(
   return result;
 }
 
-/** Convert PascalCase enum values in a request body to camelCase for the API. */
+/**
+ * Convert PascalCase enum values in a request body to camelCase for the API.
+ * Handles fields: category, urgency, status. Add new enum fields here as needed.
+ */
 export function denormalizeBody<T extends Record<string, unknown>>(body: T): T {
   const result = { ...body } as Record<string, unknown>;
   if (typeof result.category === 'string') result.category = denormalizeEnum(result.category);
