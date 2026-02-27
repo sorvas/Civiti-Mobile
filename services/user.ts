@@ -14,6 +14,7 @@ import type {
 } from '@/types/user';
 
 import { apiClient } from './api-client';
+import { denormalizeBody, denormalizeParams, normalizeIssueDetail, normalizePagedIssues } from './normalize-issue';
 
 export function getUserProfile(): Promise<UserProfileResponse> {
   return apiClient('/user/profile');
@@ -35,24 +36,26 @@ export function deleteUserAccount(): Promise<void> {
   return apiClient('/user/account', { method: 'DELETE' });
 }
 
-export function getUserIssues(
+export async function getUserIssues(
   params?: GetUserIssuesParams,
 ): Promise<PagedResult<IssueListResponse>> {
-  return apiClient('/user/issues', { params: { ...params } });
+  const page = await apiClient<PagedResult<IssueListResponse>>('/user/issues', { params: denormalizeParams(params) });
+  return normalizePagedIssues(page);
 }
 
-export function updateUserIssue(
+export async function updateUserIssue(
   id: string,
   data: UpdateIssueRequest,
 ): Promise<IssueDetailResponse> {
-  return apiClient(`/user/issues/${id}`, { method: 'PUT', body: data });
+  const issue = await apiClient<IssueDetailResponse>(`/user/issues/${id}`, { method: 'PUT', body: denormalizeBody(data) });
+  return normalizeIssueDetail(issue);
 }
 
 export function updateUserIssueStatus(
   id: string,
   data: UpdateIssueStatusRequest,
 ): Promise<void> {
-  return apiClient(`/user/issues/${id}/status`, { method: 'PUT', body: data });
+  return apiClient(`/user/issues/${id}/status`, { method: 'PUT', body: denormalizeBody(data) });
 }
 
 export function getUserGamification(): Promise<UserGamificationResponse> {
