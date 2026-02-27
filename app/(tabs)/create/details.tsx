@@ -31,12 +31,12 @@ const DESCRIPTION_MAX = 2000;
 const DESCRIPTION_MIN = 50;
 const OUTCOME_MAX = 1000;
 const IMPACT_MAX = 1000;
-const ADDRESS_MAX = 500;
 
 type TouchedFields = {
   title: boolean;
   description: boolean;
-  address: boolean;
+  desiredOutcome: boolean;
+  communityImpact: boolean;
 };
 
 export default function CreateStep3() {
@@ -48,7 +48,8 @@ export default function CreateStep3() {
   const [touched, setTouched] = useState<TouchedFields>({
     title: false,
     description: false,
-    address: false,
+    desiredOutcome: false,
+    communityImpact: false,
   });
 
   const markTouched = useCallback((field: keyof TouchedFields) => {
@@ -65,21 +66,26 @@ export default function CreateStep3() {
         ? Localization.wizard.descriptionTooShort
         : undefined
     : undefined;
-  const addressError =
-    touched.address && !wizard.address.trim()
-      ? Localization.wizard.addressRequired
+  const desiredOutcomeError =
+    touched.desiredOutcome && !wizard.desiredOutcome.trim()
+      ? Localization.wizard.desiredOutcomeRequired
+      : undefined;
+  const communityImpactError =
+    touched.communityImpact && !wizard.communityImpact.trim()
+      ? Localization.wizard.communityImpactRequired
       : undefined;
 
   const isFormValid =
     wizard.title.trim().length >= 1 &&
     wizard.description.trim().length >= DESCRIPTION_MIN &&
-    wizard.address.trim().length >= 1 &&
+    wizard.desiredOutcome.trim().length >= 1 &&
+    wizard.communityImpact.trim().length >= 1 &&
     wizard.latitude != null;
 
   const handleNext = useCallback(() => {
     if (!isFormValid) {
       // Mark all as touched to show errors
-      setTouched({ title: true, description: true, address: true });
+      setTouched({ title: true, description: true, desiredOutcome: true, communityImpact: true });
       return;
     }
     router.push('/create/authorities');
@@ -143,7 +149,6 @@ export default function CreateStep3() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={insets.top + 60}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -206,26 +211,18 @@ export default function CreateStep3() {
             <UrgencySelector value={wizard.urgency} onValueChange={wizard.setUrgency} />
           </View>
 
-          {/* AI Enhance */}
-          <Button
-            variant="secondary"
-            title={isEnhancing ? Localization.wizard.enhancing : Localization.wizard.enhanceWithAI}
-            onPress={handleEnhance}
-            disabled={!canEnhance}
-            isLoading={isEnhancing}
-            size="small"
-          />
-
           {/* Desired outcome */}
           <TextInput
             label={Localization.wizard.desiredOutcomeLabel}
             placeholder={Localization.wizard.desiredOutcomePlaceholder}
             value={wizard.desiredOutcome}
             onChangeText={wizard.setDesiredOutcome}
+            onBlur={() => markTouched('desiredOutcome')}
             maxLength={OUTCOME_MAX}
             multiline
             numberOfLines={3}
             style={styles.multilineInputSmall}
+            error={desiredOutcomeError}
             textAlignVertical="top"
           />
 
@@ -235,22 +232,23 @@ export default function CreateStep3() {
             placeholder={Localization.wizard.communityImpactPlaceholder}
             value={wizard.communityImpact}
             onChangeText={wizard.setCommunityImpact}
+            onBlur={() => markTouched('communityImpact')}
             maxLength={IMPACT_MAX}
             multiline
             numberOfLines={3}
             style={styles.multilineInputSmall}
+            error={communityImpactError}
             textAlignVertical="top"
           />
 
-          {/* Address */}
-          <TextInput
-            label={Localization.wizard.addressLabel}
-            placeholder={Localization.wizard.addressPlaceholder}
-            value={wizard.address}
-            onChangeText={wizard.setAddress}
-            onBlur={() => markTouched('address')}
-            maxLength={ADDRESS_MAX}
-            error={addressError}
+          {/* AI Enhance */}
+          <Button
+            variant="primary"
+            title={isEnhancing ? Localization.wizard.enhancing : Localization.wizard.enhanceWithAI}
+            onPress={handleEnhance}
+            disabled={!canEnhance}
+            isLoading={isEnhancing}
+            size="small"
           />
 
           {/* Location */}
@@ -263,17 +261,14 @@ export default function CreateStep3() {
                   latitude={wizard.latitude}
                   longitude={wizard.longitude}
                   address={wizard.address}
+                  showOpenInMaps={false}
                 />
-                <Pressable
+                <Button
+                  variant="primary"
+                  size="small"
+                  title={Localization.wizard.changeLocation}
                   onPress={() => router.push('/create/location-picker')}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  style={styles.changeLocationButton}
-                >
-                  <ThemedText type="link">
-                    {Localization.wizard.changeLocation}
-                  </ThemedText>
-                </Pressable>
+                />
               </View>
             ) : (
               <Pressable
@@ -313,17 +308,19 @@ export default function CreateStep3() {
           },
         ]}
       >
-        {!isFormValid && (touched.title || touched.description || touched.address) ? (
+        {!isFormValid && (touched.title || touched.description || touched.desiredOutcome || touched.communityImpact) ? (
           <ThemedText type="caption" style={{ color: Colors[scheme].error }}>
             {!wizard.title.trim()
               ? Localization.wizard.titleRequired
               : wizard.description.trim().length < DESCRIPTION_MIN
                 ? Localization.wizard.descriptionTooShort
-                : !wizard.address.trim()
-                  ? Localization.wizard.addressRequired
-                  : !wizard.latitude
-                    ? Localization.wizard.locationRequired
-                    : null}
+                : !wizard.desiredOutcome.trim()
+                  ? Localization.wizard.desiredOutcomeRequired
+                  : !wizard.communityImpact.trim()
+                    ? Localization.wizard.communityImpactRequired
+                    : !wizard.latitude
+                      ? Localization.wizard.locationRequired
+                      : null}
           </ThemedText>
         ) : null}
         <Button
@@ -368,10 +365,6 @@ const styles = StyleSheet.create({
   },
   locationSection: {
     gap: Spacing.sm,
-  },
-  changeLocationButton: {
-    minHeight: 44,
-    justifyContent: 'center' as const,
   },
   locationPlaceholder: {
     alignItems: 'center',

@@ -29,7 +29,7 @@ export default function CreateSuccess() {
   // Reset wizard state now that we've navigated away from review
   useEffect(() => {
     wizard.reset();
-  }, [wizard]);
+  }, [wizard.reset]);
 
   // Animated entrance
   const scale = useSharedValue(0);

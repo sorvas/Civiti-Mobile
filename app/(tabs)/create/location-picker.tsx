@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  TextInput as RNTextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 
 import { LocationMapPicker } from '@/components/location-map-picker';
 import { ThemedText } from '@/components/themed-text';
@@ -9,11 +16,13 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Localization } from '@/constants/localization';
-import { BorderRadius, Spacing } from '@/constants/spacing';
-import { Colors } from '@/constants/theme';
+import { BorderRadius, Shadows, Spacing } from '@/constants/spacing';
+import { Colors, Fonts } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useWizard } from '@/store/wizard-context';
 import { reverseGeocode } from '@/utils/reverse-geocode';
+
+const SEARCH_DEBOUNCE_MS = 500;
 
 export default function LocationPickerScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -26,9 +35,17 @@ export default function LocationPickerScreen() {
   const [resolvedDistrict, setResolvedDistrict] = useState(wizard.district);
   const [isGeocoding, setIsGeocoding] = useState(false);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchSeqRef = useRef(0);
+
   const handleLocationSelect = useCallback((lat: number, lng: number) => {
     setSelectedLat(lat);
     setSelectedLng(lng);
+    setSearchError(null);
   }, []);
 
   // Reverse geocode when coordinates change
@@ -59,10 +76,53 @@ export default function LocationPickerScreen() {
     };
   }, [selectedLat, selectedLng]);
 
+  // Debounced forward geocode from search input
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+    setSearchError(null);
+    searchSeqRef.current += 1;
+
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    if (text.trim().length < 3) {
+      setIsSearching(false);
+      return;
+    }
+
+    const seq = searchSeqRef.current;
+    searchTimer.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await Location.geocodeAsync(text.trim());
+        if (seq !== searchSeqRef.current) return; // stale — discard
+        if (results.length > 0) {
+          const { latitude: lat, longitude: lng } = results[0];
+          handleLocationSelect(lat, lng);
+        } else {
+          setSearchError(Localization.wizard.searchNoResults);
+        }
+      } catch (err) {
+        if (seq !== searchSeqRef.current) return; // stale — discard
+        console.warn('[LocationPicker] Forward geocode failed:', err);
+        const msg = err instanceof Error ? err.message.toLowerCase() : '';
+        const isNetwork = err instanceof TypeError || msg.includes('network') || msg.includes('timeout');
+        setSearchError(isNetwork ? Localization.wizard.searchFailed : Localization.wizard.searchNoResults);
+      } finally {
+        if (seq === searchSeqRef.current) setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+  }, [handleLocationSelect]);
+
+  // Clean up search timer
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, []);
+
   const handleConfirm = useCallback(() => {
     if (selectedLat == null || selectedLng == null) return;
-    // Only overwrite address from geocode if non-empty (preserve manually typed address)
-    const addr = resolvedAddress || wizard.address;
+    const addr = resolvedAddress || '';
     wizard.setLocation(selectedLat, selectedLng, resolvedDistrict, addr);
     router.back();
   }, [selectedLat, selectedLng, resolvedDistrict, resolvedAddress, wizard]);
@@ -93,6 +153,43 @@ export default function LocationPickerScreen() {
           longitude={selectedLng}
           onLocationSelect={handleLocationSelect}
         />
+
+        {/* Floating search bar */}
+        <View style={[styles.searchContainer, { top: Spacing.md }]}>
+          <View
+            style={[
+              styles.searchBar,
+              {
+                backgroundColor: Colors[scheme].surface,
+                borderColor: Colors[scheme].border,
+              },
+            ]}
+          >
+            <IconSymbol name="magnifyingglass" size={18} color={Colors[scheme].textSecondary} />
+            <RNTextInput
+              style={[
+                styles.searchInput,
+                { color: Colors[scheme].text, fontFamily: Fonts.regular },
+              ]}
+              placeholder={Localization.wizard.searchAddressPlaceholder}
+              placeholderTextColor={Colors[scheme].textSecondary}
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+            {isSearching ? (
+              <ActivityIndicator size="small" color={Colors[scheme].tint} />
+            ) : null}
+          </View>
+          {searchError ? (
+            <View style={[styles.searchErrorBubble, { backgroundColor: Colors[scheme].surface }]}>
+              <ThemedText type="caption" style={{ color: Colors[scheme].error }}>
+                {searchError}
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
 
         {!hasSelection ? (
           <View style={[styles.hint, { backgroundColor: Colors[scheme].surface }]}>
@@ -129,7 +226,11 @@ export default function LocationPickerScreen() {
                   <ThemedText type="body" numberOfLines={2}>
                     {resolvedAddress}
                   </ThemedText>
-                ) : null}
+                ) : (
+                  <ThemedText type="caption" style={{ color: Colors[scheme].error }}>
+                    {Localization.wizard.geocodeFailed}
+                  </ThemedText>
+                )}
                 {resolvedDistrict ? (
                   <View
                     style={[
@@ -150,7 +251,7 @@ export default function LocationPickerScreen() {
         <Button
           title={Localization.wizard.confirmLocation}
           onPress={handleConfirm}
-          disabled={!hasSelection || isGeocoding}
+          disabled={!hasSelection || isGeocoding || !resolvedAddress}
         />
       </View>
     </ThemedView>
@@ -180,6 +281,36 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+  },
+  searchContainer: {
+    position: 'absolute',
+    left: Spacing.lg,
+    right: Spacing.lg,
+    zIndex: 1,
+    gap: Spacing.xs,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    height: 44,
+    borderRadius: BorderRadius.sm,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    ...Shadows.md,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  searchErrorBubble: {
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    borderCurve: 'continuous',
   },
   hint: {
     position: 'absolute',
