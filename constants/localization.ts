@@ -349,6 +349,8 @@ export const Localization = {
     geocoding: 'Se caută adresa...',
     searchAddressPlaceholder: 'Caută adresă...',
     searchNoResults: 'Nu s-au găsit rezultate pentru această adresă',
+    searchFailed: 'Căutarea a eșuat. Verifică conexiunea la internet.',
+    geocodeFailed: 'Adresa nu a putut fi determinată. Mută pinul pentru a reîncerca.',
     // Step 5 — Review & Submit
     step5Title: 'Revizuire problemă',
     step5Subtitle: 'Verifică detaliile și trimite',

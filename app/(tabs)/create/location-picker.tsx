@@ -40,6 +40,7 @@ export default function LocationPickerScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchSeqRef = useRef(0);
 
   const handleLocationSelect = useCallback((lat: number, lng: number) => {
     setSelectedLat(lat);
@@ -79,6 +80,7 @@ export default function LocationPickerScreen() {
   const handleSearchChange = useCallback((text: string) => {
     setSearchQuery(text);
     setSearchError(null);
+    searchSeqRef.current += 1;
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
 
@@ -87,10 +89,12 @@ export default function LocationPickerScreen() {
       return;
     }
 
+    const seq = searchSeqRef.current;
     searchTimer.current = setTimeout(async () => {
       setIsSearching(true);
       try {
         const results = await Location.geocodeAsync(text.trim());
+        if (seq !== searchSeqRef.current) return; // stale — discard
         if (results.length > 0) {
           const { latitude: lat, longitude: lng } = results[0];
           handleLocationSelect(lat, lng);
@@ -98,10 +102,13 @@ export default function LocationPickerScreen() {
           setSearchError(Localization.wizard.searchNoResults);
         }
       } catch (err) {
+        if (seq !== searchSeqRef.current) return; // stale — discard
         console.warn('[LocationPicker] Forward geocode failed:', err);
-        setSearchError(Localization.wizard.searchNoResults);
+        const msg = err instanceof Error ? err.message.toLowerCase() : '';
+        const isNetwork = err instanceof TypeError || msg.includes('network') || msg.includes('timeout');
+        setSearchError(isNetwork ? Localization.wizard.searchFailed : Localization.wizard.searchNoResults);
       } finally {
-        setIsSearching(false);
+        if (seq === searchSeqRef.current) setIsSearching(false);
       }
     }, SEARCH_DEBOUNCE_MS);
   }, [handleLocationSelect]);
@@ -219,7 +226,11 @@ export default function LocationPickerScreen() {
                   <ThemedText type="body" numberOfLines={2}>
                     {resolvedAddress}
                   </ThemedText>
-                ) : null}
+                ) : (
+                  <ThemedText type="caption" style={{ color: Colors[scheme].error }}>
+                    {Localization.wizard.geocodeFailed}
+                  </ThemedText>
+                )}
                 {resolvedDistrict ? (
                   <View
                     style={[
@@ -240,7 +251,7 @@ export default function LocationPickerScreen() {
         <Button
           title={Localization.wizard.confirmLocation}
           onPress={handleConfirm}
-          disabled={!hasSelection || isGeocoding}
+          disabled={!hasSelection || isGeocoding || !resolvedAddress}
         />
       </View>
     </ThemedView>
