@@ -406,6 +406,34 @@ export const Localization = {
     maxPhotos: 'Ai atins limita de fotografii',
   },
 
+  // Profile
+  profile: {
+    levelBadge: (n: number) => `Nivel ${n}`,
+    points: (n: number) => `${n} puncte`,
+    levelProgress: 'Progres nivel',
+    pointsToNext: (n: number) => `${n} puncte până la nivelul următor`,
+    statsTitle: 'Statistici',
+    issuesReported: 'Probleme raportate',
+    issuesResolved: 'Probleme rezolvate',
+    communityVotes: 'Voturi comunitate',
+    loginStreak: 'Serie autentificări',
+    badgesTitle: 'Insigne recente',
+    badgesViewAll: 'Vezi toate',
+    badgesEmpty: 'Nu ai obținut încă nicio insignă',
+    achievementsTitle: 'Realizări active',
+    achievementsViewAll: 'Vezi toate',
+    achievementsEmpty: 'Nu ai realizări active momentan',
+    editProfile: 'Editează profilul',
+    leaderboard: 'Clasament',
+    settings: 'Setări',
+    logout: 'Deconectare',
+    logoutConfirmTitle: 'Deconectare',
+    logoutConfirmMessage: 'Ești sigur că vrei să te deconectezi?',
+    logoutConfirmYes: 'Da, deconectează-mă',
+    loginRequired: 'Conectează-te pentru a vedea profilul',
+    gamificationUnavailable: 'Statisticile nu sunt disponibile momentan',
+  },
+
   // Placeholder captions (dev-only, describes which story builds the real screen)
   placeholderCaptions: {
     issues: 'Placeholder — S06 will build the full issues list.',

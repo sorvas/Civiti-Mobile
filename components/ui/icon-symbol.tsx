@@ -58,6 +58,14 @@ const MAPPING = {
   'circle': 'radio-button-unchecked',
   'xmark': 'close',
   'mappin.and.ellipse': 'place',
+  // Profile
+  'flame.fill': 'local-fire-department',
+  'pencil': 'edit',
+  'gearshape.fill': 'settings',
+  'chart.bar.fill': 'leaderboard',
+  'rectangle.portrait.and.arrow.right': 'logout',
+  'star.fill': 'star',
+  'trophy.fill': 'emoji-events',
   // Misc
   'exclamationmark.triangle.fill': 'warning',
   'arrow.clockwise': 'refresh',
