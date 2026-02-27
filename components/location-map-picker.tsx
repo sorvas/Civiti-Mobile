@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import MapView, {
   Marker,
@@ -29,6 +29,24 @@ export function LocationMapPicker({
   initialRegion,
 }: LocationMapPickerProps) {
   const mapRef = useRef<MapView>(null);
+
+  // Animate to new coordinates when they change (e.g. from search)
+  const prevCoords = useRef<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    if (latitude == null || longitude == null) return;
+    const prev = prevCoords.current;
+    // Skip if coordinates haven't actually changed (avoids animating on initial mount)
+    if (prev && prev.lat === latitude && prev.lng === longitude) return;
+    prevCoords.current = { lat: latitude, lng: longitude };
+
+    // Only animate if this isn't the initial render with existing wizard values
+    if (prev != null) {
+      mapRef.current?.animateToRegion(
+        { latitude, longitude, latitudeDelta: 0.005, longitudeDelta: 0.005 },
+        500,
+      );
+    }
+  }, [latitude, longitude]);
 
   const handleMapPress = useCallback(
     (e: MapPressEvent) => {

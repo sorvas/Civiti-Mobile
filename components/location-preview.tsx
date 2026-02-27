@@ -12,12 +12,14 @@ type LocationPreviewProps = {
   latitude: number;
   longitude: number;
   address: string | null;
+  showOpenInMaps?: boolean;
 };
 
 export function LocationPreview({
   latitude,
   longitude,
   address,
+  showOpenInMaps = true,
 }: LocationPreviewProps) {
   const border = useThemeColor({}, 'border');
   const textSecondary = useThemeColor({}, 'textSecondary');
@@ -36,7 +38,7 @@ export function LocationPreview({
 
   return (
     <View style={[styles.container, { borderColor: border }]}>
-      <Pressable onPress={handleOpenMaps} style={styles.mapWrapper}>
+      <Pressable onPress={showOpenInMaps ? handleOpenMaps : undefined} style={styles.mapWrapper}>
         <MapView
           style={styles.map}
           provider={PROVIDER_DEFAULT}
@@ -68,15 +70,17 @@ export function LocationPreview({
         </View>
       ) : null}
 
-      <Pressable
-        onPress={handleOpenMaps}
-        style={styles.openLink}
-        accessibilityRole="link"
-      >
-        <ThemedText type="link" style={{ color: accent }}>
-          {Localization.detail.openInMaps}
-        </ThemedText>
-      </Pressable>
+      {showOpenInMaps ? (
+        <Pressable
+          onPress={handleOpenMaps}
+          style={styles.openLink}
+          accessibilityRole="link"
+        >
+          <ThemedText type="link" style={{ color: accent }}>
+            {Localization.detail.openInMaps}
+          </ThemedText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

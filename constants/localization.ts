@@ -321,6 +321,8 @@ export const Localization = {
     descriptionRequired: 'Descrierea este obligatorie',
     descriptionTooShort: 'Descrierea trebuie să aibă cel puțin 50 de caractere',
     descriptionTooLong: 'Descrierea nu poate depăși 2000 de caractere',
+    desiredOutcomeRequired: 'Rezultatul dorit este obligatoriu',
+    communityImpactRequired: 'Impactul asupra comunității este obligatoriu',
     addressRequired: 'Adresa este obligatorie',
     locationRequired: 'Selectează locația pe hartă',
     // Step 4 — Authorities
@@ -345,6 +347,8 @@ export const Localization = {
     locationPickerTitle: 'Selectează locația',
     tapToPlacePin: 'Atinge harta pentru a plasa un pin',
     geocoding: 'Se caută adresa...',
+    searchAddressPlaceholder: 'Caută adresă...',
+    searchNoResults: 'Nu s-au găsit rezultate pentru această adresă',
     // Step 5 — Review & Submit
     step5Title: 'Revizuire problemă',
     step5Subtitle: 'Verifică detaliile și trimite',
