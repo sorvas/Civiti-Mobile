@@ -16,12 +16,12 @@ import { denormalizeBody, denormalizeParams, normalizeIssueDetail, normalizePage
 export async function getIssues(
   params?: GetIssuesParams,
 ): Promise<PagedResult<IssueListResponse>> {
-  const page = await apiClient<PagedResult<IssueListResponse>>('/issues', { authenticated: false, params: denormalizeParams(params) });
+  const page = await apiClient<PagedResult<IssueListResponse>>('/issues', { authenticated: false, authOptional: true, params: denormalizeParams(params) });
   return normalizePagedIssues(page);
 }
 
 export async function getIssueById(id: string): Promise<IssueDetailResponse> {
-  const issue = await apiClient<IssueDetailResponse>(`/issues/${id}`, { authenticated: false });
+  const issue = await apiClient<IssueDetailResponse>(`/issues/${id}`, { authenticated: false, authOptional: true });
   return normalizeIssueDetail(issue);
 }
 

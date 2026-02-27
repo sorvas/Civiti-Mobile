@@ -18,7 +18,10 @@ export function setTokenGetter(getter: TokenGetter | null): void {
 type QueryParams = Record<string, string | number | boolean | undefined | null>;
 
 interface ApiClientOptions extends Omit<RequestInit, 'body'> {
+  /** When true (default), throws AuthError if no token. When false, skips auth entirely. */
   authenticated?: boolean;
+  /** When true, attaches token if available but doesn't throw if missing. */
+  authOptional?: boolean;
   params?: QueryParams;
   body?: unknown;
 }
@@ -45,7 +48,7 @@ export async function apiClient<T>(
   path: string,
   options: ApiClientOptions = {},
 ): Promise<T> {
-  const { authenticated = true, params, body, headers, ...fetchOptions } =
+  const { authenticated = true, authOptional = false, params, body, headers, ...fetchOptions } =
     options;
 
   const requestHeaders: Record<string, string> = {
@@ -65,6 +68,11 @@ export async function apiClient<T>(
       throw new AuthError();
     }
     requestHeaders['Authorization'] = `Bearer ${token}`;
+  } else if (authOptional && tokenGetter) {
+    const token = await Promise.resolve(tokenGetter()).catch(() => null);
+    if (token) {
+      requestHeaders['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   const url = buildUrl(path, params);
