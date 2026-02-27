@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { IssueCategory } from '@/constants/enums';
 import { Localization } from '@/constants/localization';
-import { CategoryColors } from '@/constants/theme';
+import { BrandColors, CategoryColors } from '@/constants/theme';
 import { BorderRadius, Spacing } from '@/constants/spacing';
 import { hexToRgba } from '@/utils/colors';
 
@@ -27,9 +27,9 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
   const color = CategoryColors[category] ?? CategoryColors.Other;
 
   return (
-    <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.1) }]}>
-      <IconSymbol name={CATEGORY_ICONS[category]} size={14} color={color} />
-      <ThemedText type="badge" style={{ color }}>
+    <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.85) }]}>
+      <IconSymbol name={CATEGORY_ICONS[category]} size={14} color={BrandColors.white} />
+      <ThemedText type="badge" style={{ color: BrandColors.white }}>
         {Localization.category[category]}
       </ThemedText>
     </View>
