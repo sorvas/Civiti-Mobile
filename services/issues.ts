@@ -11,21 +11,24 @@ import type {
 } from '@/types/issues';
 
 import { apiClient } from './api-client';
+import { denormalizeBody, denormalizeParams, normalizeIssueDetail, normalizePagedIssues } from './normalize-issue';
 
-export function getIssues(
+export async function getIssues(
   params?: GetIssuesParams,
 ): Promise<PagedResult<IssueListResponse>> {
-  return apiClient('/issues', { authenticated: false, params: { ...params } });
+  const page = await apiClient<PagedResult<IssueListResponse>>('/issues', { authenticated: false, params: denormalizeParams(params) });
+  return normalizePagedIssues(page);
 }
 
-export function getIssueById(id: string): Promise<IssueDetailResponse> {
-  return apiClient(`/issues/${id}`, { authenticated: false });
+export async function getIssueById(id: string): Promise<IssueDetailResponse> {
+  const issue = await apiClient<IssueDetailResponse>(`/issues/${id}`, { authenticated: false });
+  return normalizeIssueDetail(issue);
 }
 
 export function createIssue(
   data: CreateIssueRequest,
 ): Promise<CreateIssueResponse> {
-  return apiClient('/issues', { method: 'POST', body: data });
+  return apiClient('/issues', { method: 'POST', body: denormalizeBody(data) });
 }
 
 export function voteForIssue(id: string): Promise<void> {
@@ -43,7 +46,7 @@ export function confirmEmailSent(id: string): Promise<void> {
 export function enhanceText(
   data: EnhanceTextRequest,
 ): Promise<EnhanceTextResponse> {
-  return apiClient('/issues/enhance-text', { method: 'POST', body: data });
+  return apiClient('/issues/enhance-text', { method: 'POST', body: denormalizeBody(data) });
 }
 
 export function generateIssuePosterUrl(id: string): string {
