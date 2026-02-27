@@ -27,9 +27,9 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
   const color = CategoryColors[category] ?? CategoryColors.Other;
 
   return (
-    <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.1) }]}>
-      <IconSymbol name={CATEGORY_ICONS[category]} size={14} color={color} />
-      <ThemedText type="badge" style={{ color }}>
+    <View style={[styles.badge, { backgroundColor: hexToRgba(color, 0.85) }]}>
+      <IconSymbol name={CATEGORY_ICONS[category]} size={14} color="#FFFFFF" />
+      <ThemedText type="badge" style={{ color: '#FFFFFF' }}>
         {Localization.category[category]}
       </ThemedText>
     </View>
