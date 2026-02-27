@@ -59,7 +59,16 @@ export async function apiClient<T>(
     requestHeaders['Content-Type'] = 'application/json';
   }
 
-  if (authenticated) {
+  if (authOptional && tokenGetter) {
+    // Best-effort: attach token if available, proceed unauthenticated if not
+    const token = await Promise.resolve(tokenGetter()).catch((err) => {
+      if (__DEV__) console.warn('[api-client] authOptional token retrieval failed:', err);
+      return null;
+    });
+    if (token) {
+      requestHeaders['Authorization'] = `Bearer ${token}`;
+    }
+  } else if (authenticated) {
     if (!tokenGetter) {
       throw new AuthError();
     }
@@ -68,11 +77,6 @@ export async function apiClient<T>(
       throw new AuthError();
     }
     requestHeaders['Authorization'] = `Bearer ${token}`;
-  } else if (authOptional && tokenGetter) {
-    const token = await Promise.resolve(tokenGetter()).catch(() => null);
-    if (token) {
-      requestHeaders['Authorization'] = `Bearer ${token}`;
-    }
   }
 
   const url = buildUrl(path, params);
