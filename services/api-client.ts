@@ -59,14 +59,16 @@ export async function apiClient<T>(
     requestHeaders['Content-Type'] = 'application/json';
   }
 
-  if (authOptional && tokenGetter) {
+  if (authOptional) {
     // Best-effort: attach token if available, proceed unauthenticated if not
-    const token = await Promise.resolve(tokenGetter()).catch((err) => {
-      if (__DEV__) console.warn('[api-client] authOptional token retrieval failed:', err);
-      return null;
-    });
-    if (token) {
-      requestHeaders['Authorization'] = `Bearer ${token}`;
+    if (tokenGetter) {
+      const token = await Promise.resolve(tokenGetter()).catch((err) => {
+        if (__DEV__) console.warn('[api-client] authOptional token retrieval failed:', err);
+        return null;
+      });
+      if (token) {
+        requestHeaders['Authorization'] = `Bearer ${token}`;
+      }
     }
   } else if (authenticated) {
     if (!tokenGetter) {

@@ -10,6 +10,8 @@ import type {
   IssueListResponse,
 } from '@/types/issues';
 
+import { normalizeEnum } from '@/utils/normalize-enum';
+
 import { apiClient } from './api-client';
 import { denormalizeBody, denormalizeParams, normalizeIssueDetail, normalizePagedIssues } from './normalize-issue';
 
@@ -25,10 +27,11 @@ export async function getIssueById(id: string): Promise<IssueDetailResponse> {
   return normalizeIssueDetail(issue);
 }
 
-export function createIssue(
+export async function createIssue(
   data: CreateIssueRequest,
 ): Promise<CreateIssueResponse> {
-  return apiClient('/issues', { method: 'POST', body: denormalizeBody(data) });
+  const response = await apiClient<CreateIssueResponse>('/issues', { method: 'POST', body: denormalizeBody(data) });
+  return response.status ? { ...response, status: normalizeEnum(response.status) } : response;
 }
 
 export function voteForIssue(id: string): Promise<void> {
