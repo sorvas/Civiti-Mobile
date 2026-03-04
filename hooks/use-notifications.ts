@@ -103,6 +103,8 @@ export function useNotifications(): NotificationBadgeValue {
   const [badgeCount, setBadgeCount] = useState(0);
   const promptingRef = useRef(false);
   const prevSessionRef = useRef<typeof session | undefined>(undefined);
+  const sessionRef = useRef(session);
+  useEffect(() => { sessionRef.current = session; }, [session]);
 
   const clearBadge = useCallback(() => setBadgeCount(0), []);
 
@@ -225,10 +227,12 @@ export function useNotifications(): NotificationBadgeValue {
     prevSessionRef.current = session;
   }, [session]);
 
-  // Foreground notification listener → increment badge
+  // Foreground notification listener → increment badge (only when signed in)
   useEffect(() => {
     const sub = Notifications.addNotificationReceivedListener(() => {
-      setBadgeCount((prev) => prev + 1);
+      if (sessionRef.current) {
+        setBadgeCount((prev) => prev + 1);
+      }
     });
     return () => sub.remove();
   }, []);

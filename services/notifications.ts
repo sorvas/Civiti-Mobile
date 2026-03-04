@@ -60,10 +60,9 @@ export async function getAndStorePushToken(): Promise<string | null> {
 
 // TODO: Call apiClient POST /user/push-token when the backend adds this endpoint
 export async function registerPushTokenWithBackend(token: string): Promise<void> {
-  console.warn(
-    '[notifications] Backend token registration not yet implemented. Token:',
-    token,
-  );
+  if (__DEV__) {
+    console.log('[notifications] Backend token registration not yet implemented. Token:', token);
+  }
 }
 
 export async function clearStoredPushToken(): Promise<void> {
