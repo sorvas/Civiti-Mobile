@@ -43,6 +43,7 @@ export default function CreateStep3() {
   const scheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
   const wizard = useWizard();
+  const { setLastCompletedStep } = wizard;
   const { mutate: enhance, isPending: isEnhancing } = useEnhanceText();
 
   const [touched, setTouched] = useState<TouchedFields>({
@@ -88,8 +89,9 @@ export default function CreateStep3() {
       setTouched({ title: true, description: true, desiredOutcome: true, communityImpact: true });
       return;
     }
+    setLastCompletedStep(3);
     router.push('/create/authorities');
-  }, [isFormValid]);
+  }, [isFormValid, setLastCompletedStep]);
 
   const handleEnhance = useCallback(() => {
     if (!wizard.category || wizard.description.trim().length < DESCRIPTION_MIN) return;

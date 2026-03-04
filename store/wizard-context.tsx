@@ -1,10 +1,48 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { IssueCategory, UrgencyLevel } from '@/constants/enums';
 import { UrgencyLevel as UrgencyLevelEnum } from '@/constants/enums';
+import { WIZARD_DRAFT_KEY } from '@/constants/storage-keys';
 import type { IssueAuthorityInput } from '@/types/issues';
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 const MAX_PHOTOS = 7;
+const AUTO_SAVE_DEBOUNCE_MS = 1000;
+
+// ─── Draft type & validation ────────────────────────────────────
+
+export type WizardDraft = {
+  category: IssueCategory | null;
+  photoUrls: string[];
+  title: string;
+  description: string;
+  urgency: UrgencyLevel;
+  desiredOutcome: string;
+  communityImpact: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  district: string | null;
+  authorities: IssueAuthorityInput[];
+  lastCompletedStep: number;
+  savedAt: string;
+};
+
+export function isValidDraft(raw: unknown): raw is WizardDraft {
+  if (raw == null || typeof raw !== 'object') return false;
+  const d = raw as Record<string, unknown>;
+  return (
+    typeof d.title === 'string' &&
+    typeof d.description === 'string' &&
+    typeof d.address === 'string' &&
+    Array.isArray(d.photoUrls) &&
+    Array.isArray(d.authorities) &&
+    typeof d.lastCompletedStep === 'number' &&
+    Number.isFinite(d.lastCompletedStep)
+  );
+}
+
+// ─── Context type ───────────────────────────────────────────────
 
 type WizardContextValue = {
   // Step 1
@@ -34,6 +72,10 @@ type WizardContextValue = {
   // Step 4
   authorities: IssueAuthorityInput[];
   setAuthorities: (authorities: IssueAuthorityInput[]) => void;
+  // Draft support
+  lastCompletedStep: number;
+  setLastCompletedStep: (step: number) => void;
+  restoreFromDraft: (draft: WizardDraft) => void;
   // Global
   reset: () => void;
 };
@@ -57,6 +99,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [district, setDistrict] = useState<string | null>(null);
   // Step 4
   const [authorities, setAuthoritiesState] = useState<IssueAuthorityInput[]>([]);
+  // Draft tracking
+  const [lastCompletedStep, setLastCompletedStepState] = useState(0);
+
+  // Skip the next auto-save cycle after restoreFromDraft (prevents overwriting the draft we just read)
+  const skipNextAutoSaveRef = useRef(false);
 
   // Step 1 setters
   const setCategory = useCallback((value: IssueCategory) => {
@@ -96,6 +143,30 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Draft tracking setter
+  const setLastCompletedStep = useCallback(
+    (step: number) => setLastCompletedStepState(step),
+    [],
+  );
+
+  // Restore all wizard fields from a parsed draft
+  const restoreFromDraft = useCallback((draft: WizardDraft) => {
+    skipNextAutoSaveRef.current = true;
+    setCategoryState(draft.category);
+    setPhotoUrls(draft.photoUrls);
+    setTitleState(draft.title);
+    setDescriptionState(draft.description);
+    setUrgencyState(draft.urgency);
+    setDesiredOutcomeState(draft.desiredOutcome);
+    setCommunityImpactState(draft.communityImpact);
+    setAddressState(draft.address);
+    setLatitude(draft.latitude);
+    setLongitude(draft.longitude);
+    setDistrict(draft.district);
+    setAuthoritiesState(draft.authorities);
+    setLastCompletedStepState(draft.lastCompletedStep);
+  }, []);
+
   const reset = useCallback(() => {
     setCategoryState(null);
     setPhotoUrls([]);
@@ -109,7 +180,61 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setLongitude(null);
     setDistrict(null);
     setAuthoritiesState([]);
+    setLastCompletedStepState(0);
+    AsyncStorage.removeItem(WIZARD_DRAFT_KEY).catch((err: unknown) => {
+      console.warn('[wizard] Failed to remove draft:', err);
+    });
   }, []);
+
+  // ─── Auto-save debounced ────────────────────────────────────
+
+  useEffect(() => {
+    if (category == null) return;
+    if (skipNextAutoSaveRef.current) {
+      skipNextAutoSaveRef.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const draft: WizardDraft = {
+        category,
+        photoUrls,
+        title,
+        description,
+        urgency,
+        desiredOutcome,
+        communityImpact,
+        address,
+        latitude,
+        longitude,
+        district,
+        authorities,
+        lastCompletedStep,
+        savedAt: new Date().toISOString(),
+      };
+      AsyncStorage.setItem(WIZARD_DRAFT_KEY, JSON.stringify(draft)).catch(
+        (err: unknown) => {
+          console.warn('[wizard] Auto-save failed:', err);
+        },
+      );
+    }, AUTO_SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [
+    category,
+    photoUrls,
+    title,
+    description,
+    urgency,
+    desiredOutcome,
+    communityImpact,
+    address,
+    latitude,
+    longitude,
+    district,
+    authorities,
+    lastCompletedStep,
+  ]);
 
   const value = useMemo<WizardContextValue>(
     () => ({
@@ -136,6 +261,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setLocation,
       authorities,
       setAuthorities,
+      lastCompletedStep,
+      setLastCompletedStep,
+      restoreFromDraft,
       reset,
     }),
     [
@@ -162,6 +290,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setLocation,
       authorities,
       setAuthorities,
+      lastCompletedStep,
+      setLastCompletedStep,
+      restoreFromDraft,
       reset,
     ],
   );

@@ -9,11 +9,13 @@ import { BorderRadius, Spacing } from '@/constants/spacing';
 import { CategoryColors, Colors } from '@/constants/theme';
 import { useCategories } from '@/hooks/use-categories';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useWizard } from '@/store/wizard-context';
+import { WIZARD_DRAFT_KEY } from '@/constants/storage-keys';
+import { isValidDraft, useWizard } from '@/store/wizard-context';
 import { hexToRgba } from '@/utils/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useCallback } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type IconSymbolName = Parameters<typeof IconSymbol>[0]['name'];
@@ -72,7 +74,7 @@ function CategoryCard({
 export default function CreateStep1() {
   const scheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
-  const { setCategory } = useWizard();
+  const { setCategory, setLastCompletedStep, reset, restoreFromDraft } = useWizard();
   const { data: categories, isLoading, isError, refetch } = useCategories();
   const { width: windowWidth } = useWindowDimensions();
 
@@ -80,12 +82,68 @@ export default function CreateStep1() {
   const gap = Spacing.sm;
   const cardSize = (windowWidth - gridPadding - gap * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
 
+  // ─── Draft resume check on mount ─────────────────────────────
+  useEffect(() => {
+    AsyncStorage.getItem(WIZARD_DRAFT_KEY)
+      .then((raw) => {
+        if (!raw) return;
+
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (parseErr) {
+          console.warn('[wizard] Corrupt draft JSON, discarding:', parseErr);
+          AsyncStorage.removeItem(WIZARD_DRAFT_KEY).catch((removeErr: unknown) => {
+            console.warn('[wizard] Failed to remove corrupt draft:', removeErr);
+          });
+          return;
+        }
+
+        if (!isValidDraft(parsed)) {
+          console.warn('[wizard] Draft failed validation, discarding');
+          AsyncStorage.removeItem(WIZARD_DRAFT_KEY).catch((removeErr: unknown) => {
+            console.warn('[wizard] Failed to remove invalid draft:', removeErr);
+          });
+          return;
+        }
+
+        if (parsed.category == null || parsed.lastCompletedStep < 1) return;
+
+        Alert.alert(
+          Localization.wizard.draftResumeTitle,
+          Localization.wizard.draftResumeMessage,
+          [
+            {
+              text: Localization.wizard.draftResumeNo,
+              style: 'destructive',
+              onPress: () => {
+                reset();
+              },
+            },
+            {
+              text: Localization.wizard.draftResumeYes,
+              onPress: () => {
+                restoreFromDraft(parsed);
+                const routes = ['/create/photos', '/create/details', '/create/authorities', '/create/review'] as const;
+                const stepIndex = Math.max(0, Math.min(parsed.lastCompletedStep, routes.length) - 1);
+                router.push(routes[stepIndex]);
+              },
+            },
+          ],
+        );
+      })
+      .catch((err: unknown) => {
+        console.warn('[wizard] Failed to check draft:', err);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: run once on mount for draft detection
+
   const handleSelect = useCallback(
     (value: IssueCategory) => {
       setCategory(value);
+      setLastCompletedStep(1);
       router.push('/create/photos');
     },
-    [setCategory],
+    [setCategory, setLastCompletedStep],
   );
 
   return (
