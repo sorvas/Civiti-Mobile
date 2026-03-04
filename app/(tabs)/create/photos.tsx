@@ -11,6 +11,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { usePhotoUpload } from '@/hooks/use-photo-upload';
 import { MAX_PHOTOS, useWizard } from '@/store/wizard-context';
 import { router } from 'expo-router';
+import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -24,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function CreateStep2() {
   const scheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
-  const { photoUrls } = useWizard();
+  const { photoUrls, setLastCompletedStep } = useWizard();
   const {
     isUploading,
     error,
@@ -38,9 +39,10 @@ export default function CreateStep2() {
   const hasPhotos = photoUrls.length > 0;
   const atLimit = remainingSlots <= 0;
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    setLastCompletedStep(2);
     router.push('/create/details');
-  };
+  }, [setLastCompletedStep]);
 
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top + Spacing.md }]}>

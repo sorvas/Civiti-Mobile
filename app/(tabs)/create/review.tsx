@@ -25,10 +25,9 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCreateIssue } from '@/hooks/use-create-issue';
 import { ApiError, AuthError, NetworkError } from '@/services/errors';
+import { WIZARD_DRAFT_KEY } from '@/constants/storage-keys';
 import { useWizard } from '@/store/wizard-context';
 import type { CreateIssueRequest } from '@/types/issues';
-
-const DRAFT_KEY = 'civiti_wizard_draft';
 const PHOTO_THUMB_SIZE = 80;
 const MIN_DESCRIPTION_LENGTH = 50;
 
@@ -97,7 +96,7 @@ export default function CreateStep5() {
 
     submit(request, {
       onSuccess: () => {
-        AsyncStorage.removeItem(DRAFT_KEY).catch((err: unknown) => {
+        AsyncStorage.removeItem(WIZARD_DRAFT_KEY).catch((err: unknown) => {
           console.warn('[review] Failed to remove draft after submit:', err);
         });
         router.replace('/create/success');
@@ -122,30 +121,6 @@ export default function CreateStep5() {
     });
   }, [wizard, submit, isPending]);
 
-  const handleSaveDraft = useCallback(async () => {
-    try {
-      const draft = {
-        category: wizard.category,
-        photoUrls: wizard.photoUrls,
-        title: wizard.title,
-        description: wizard.description,
-        urgency: wizard.urgency,
-        desiredOutcome: wizard.desiredOutcome,
-        communityImpact: wizard.communityImpact,
-        address: wizard.address,
-        latitude: wizard.latitude,
-        longitude: wizard.longitude,
-        district: wizard.district,
-        authorities: wizard.authorities,
-        savedAt: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-      Alert.alert(Localization.wizard.draftSaved);
-    } catch (error) {
-      console.warn('[saveDraft] Failed:', error);
-      Alert.alert(Localization.errors.generic);
-    }
-  }, [wizard]);
 
   return (
     <ThemedView style={styles.container}>
@@ -316,18 +291,6 @@ export default function CreateStep5() {
           disabled={!canSubmit || isPending}
           isLoading={isPending}
         />
-        <Pressable
-          onPress={handleSaveDraft}
-          disabled={isPending}
-          style={styles.draftButton}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={Localization.actions.saveDraft}
-        >
-          <ThemedText type="link" style={{ color: Colors[scheme].tint }}>
-            {Localization.actions.saveDraft}
-          </ThemedText>
-        </Pressable>
       </View>
     </ThemedView>
   );
@@ -410,10 +373,5 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderTopWidth: 1,
-  },
-  draftButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-    alignSelf: 'center',
   },
 });

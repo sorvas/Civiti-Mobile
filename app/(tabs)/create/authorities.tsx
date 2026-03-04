@@ -30,7 +30,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function CreateStep4() {
   const scheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
-  const { authorities, setAuthorities, district } = useWizard();
+  const { authorities, setAuthorities, district, setLastCompletedStep } = useWizard();
 
   const { data: predefinedAuthorities, isLoading, isError } = useAuthorities(
     district ? { city: 'București', district } : undefined,
@@ -122,8 +122,9 @@ export default function CreateStep4() {
 
   const handleNext = useCallback(() => {
     // Authorities are optional — always allow proceeding
+    setLastCompletedStep(4);
     router.push('/create/review');
-  }, []);
+  }, [setLastCompletedStep]);
 
   const totalSelected = authorities.length;
 
