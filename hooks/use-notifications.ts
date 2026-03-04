@@ -167,6 +167,12 @@ export function useNotifications(): NotificationBadgeValue {
                     Localization.notifications.permissionDeniedTitle,
                     Localization.notifications.permissionDeniedMessage,
                   );
+                  void AsyncStorage.setItem(
+                    PUSH_PERMISSION_ASKED_KEY,
+                    'true',
+                  ).catch((err: unknown) => {
+                    console.warn('[notifications] Failed to persist permission-asked flag:', err);
+                  });
                   return;
                 }
                 const token = await getAndStorePushToken();
