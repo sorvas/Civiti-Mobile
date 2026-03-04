@@ -5,8 +5,10 @@ import { Platform } from 'react-native';
 
 import { PUSH_TOKEN_KEY } from '@/constants/storage-keys';
 
+let androidChannelReady = false;
+
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' && !androidChannelReady) {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Default',
       importance: Notifications.AndroidImportance.HIGH,
@@ -14,6 +16,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FCA311',
     });
+    androidChannelReady = true;
   }
 
   const { status: existing } = await Notifications.getPermissionsAsync();

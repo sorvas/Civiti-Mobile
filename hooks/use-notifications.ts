@@ -209,6 +209,9 @@ export function useNotifications(): NotificationBadgeValue {
   useEffect(() => {
     if (prevSessionRef.current && session === null) {
       void clearStoredPushToken();
+      void AsyncStorage.removeItem(PUSH_PERMISSION_ASKED_KEY).catch((err: unknown) => {
+        console.warn('[notifications] Failed to clear permission-asked flag on sign-out:', err);
+      });
       setBadgeCount(0);
     }
     prevSessionRef.current = session;
@@ -226,8 +229,13 @@ export function useNotifications(): NotificationBadgeValue {
   useEffect(() => {
     let cancelled = false;
 
+    const handledIds = new Set<string>();
+
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
+        const id = response.notification.request.identifier;
+        if (handledIds.has(id)) return;
+        handledIds.add(id);
         const route = parseNotificationRoute(
           response.notification.request.content,
         );
@@ -245,11 +253,15 @@ export function useNotifications(): NotificationBadgeValue {
         try {
           const response = Notifications.getLastNotificationResponse();
           if (response) {
-            const route = parseNotificationRoute(
-              response.notification.request.content,
-            );
-            if (route) {
-              navigateFromNotification(route);
+            const id = response.notification.request.identifier;
+            if (!handledIds.has(id)) {
+              handledIds.add(id);
+              const route = parseNotificationRoute(
+                response.notification.request.content,
+              );
+              if (route) {
+                navigateFromNotification(route);
+              }
             }
           }
         } catch (error) {
