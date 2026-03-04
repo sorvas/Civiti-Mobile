@@ -74,20 +74,20 @@ export const ActivityItem = memo(function ActivityItem({ activity, onPress }: Ac
         Shadows.sm,
       ]}
     >
-      <View style={styles.iconContainer}>
-        <IconSymbol name={icon.name} size={20} color={iconColor} />
+      <View style={[styles.iconCircle, { backgroundColor: border }]}>
+        <IconSymbol name={icon.name} size={18} color={iconColor} />
       </View>
 
       <View style={styles.content}>
-        <ThemedText type="caption" numberOfLines={2}>
+        <ThemedText type="body" numberOfLines={2}>
           {message}
         </ThemedText>
 
-        <View style={styles.bottomRow}>
+        <View style={styles.metaRow}>
           {activity.issueTitle ? (
             <ThemedText
               type="caption"
-              style={{ color: textSecondary }}
+              style={[styles.issueTitle, { color: textSecondary }]}
               numberOfLines={1}
             >
               {activity.issueTitle}
@@ -106,22 +106,21 @@ export const ActivityItem = memo(function ActivityItem({ activity, onPress }: Ac
   );
 });
 
-const CARD_WIDTH = 260;
-
 const styles = StyleSheet.create({
   card: {
-    width: CARD_WIDTH,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: Spacing.md,
-    gap: Spacing.sm,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    gap: Spacing.md,
     borderRadius: BorderRadius.sm,
     borderCurve: 'continuous',
     borderWidth: 1,
   },
-  iconContainer: {
-    width: 32,
-    height: 32,
+  iconCircle: {
+    width: 36,
+    height: 36,
     borderRadius: BorderRadius.full,
     borderCurve: 'continuous',
     alignItems: 'center',
@@ -131,13 +130,15 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.xs,
   },
-  bottomRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
   },
+  issueTitle: {
+    flex: 1,
+  },
   time: {
-    marginLeft: 'auto',
     flexShrink: 0,
   },
 });

@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 
 import { getRecentActivities } from '@/services/activity';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 export function useRecentActivity() {
   const query = useInfiniteQuery({
@@ -18,8 +18,10 @@ export function useRecentActivity() {
       }
       return lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined;
     },
-    getPreviousPageParam: (firstPage) =>
-      firstPage.page > 1 ? firstPage.page - 1 : undefined,
+    getPreviousPageParam: (firstPage) => {
+      if (!Number.isFinite(firstPage.page)) return undefined;
+      return firstPage.page > 1 ? firstPage.page - 1 : undefined;
+    },
   });
 
   const activities = useMemo(
@@ -41,6 +43,7 @@ export function useRecentActivity() {
     activities,
     isLoading: query.isLoading,
     isError: query.isError,
+    isRefetching: query.isRefetching,
     error: query.error,
     refetch,
     fetchNextPage,
