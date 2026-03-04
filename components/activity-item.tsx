@@ -29,23 +29,25 @@ const ICON_MAP: Record<ActivityType, IconConfig> = {
   [ActivityType.NewComment]: { name: 'text.bubble.fill', colorToken: 'textSecondary' },
 };
 
-function getFallbackMessage(activity: ActivityResponse): string {
+function getLeadInText(activity: ActivityResponse): string {
   const t = Localization.activity;
+  const actor = activity.actorDisplayName;
+
   switch (activity.type) {
-    case ActivityType.NewSupporters:
-      return t.newSupporters(
-        Number.isFinite(activity.aggregatedCount) ? activity.aggregatedCount : 0,
-      );
+    case ActivityType.NewComment:
+      return actor ? `${actor} a comentat` : t.newComment;
     case ActivityType.StatusChange:
-      return t.statusChange;
+      return actor ? `${actor} a actualizat statusul` : t.statusChange;
     case ActivityType.IssueApproved:
       return t.issueApproved;
     case ActivityType.IssueResolved:
       return t.issueResolved;
     case ActivityType.IssueCreated:
-      return t.issueCreated;
-    case ActivityType.NewComment:
-      return t.newComment;
+      return actor ? `${actor} a raportat` : t.issueCreated;
+    case ActivityType.NewSupporters:
+      return t.newSupporters(
+        Number.isFinite(activity.aggregatedCount) ? activity.aggregatedCount : 0,
+      );
     default:
       return t.title;
   }
@@ -59,7 +61,7 @@ export const ActivityItem = memo(function ActivityItem({ activity, onPress }: Ac
   const icon = ICON_MAP[activity.type] ?? ICON_MAP[ActivityType.IssueCreated];
   const iconColor = useThemeColor({}, icon.colorToken);
 
-  const message = activity.message ?? getFallbackMessage(activity);
+  const message = activity.message ?? getLeadInText(activity);
 
   return (
     <Pressable
@@ -79,28 +81,16 @@ export const ActivityItem = memo(function ActivityItem({ activity, onPress }: Ac
       </View>
 
       <View style={styles.content}>
-        <ThemedText type="body" numberOfLines={2}>
+        <ThemedText type="body" numberOfLines={3}>
           {message}
         </ThemedText>
 
-        <View style={styles.metaRow}>
-          {activity.issueTitle ? (
-            <ThemedText
-              type="caption"
-              style={[styles.issueTitle, { color: textSecondary }]}
-              numberOfLines={1}
-            >
-              {activity.issueTitle}
-            </ThemedText>
-          ) : null}
-
-          <ThemedText
-            type="caption"
-            style={[styles.time, { color: textSecondary }]}
-          >
-            {formatTimeAgo(activity.createdAt)}
-          </ThemedText>
-        </View>
+        <ThemedText
+          type="caption"
+          style={[styles.time, { color: textSecondary }]}
+        >
+          {formatTimeAgo(activity.createdAt)}
+        </ThemedText>
       </View>
     </Pressable>
   );
@@ -130,15 +120,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.xs,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  issueTitle: {
-    flex: 1,
-  },
   time: {
-    flexShrink: 0,
+    alignSelf: 'flex-end',
   },
 });
