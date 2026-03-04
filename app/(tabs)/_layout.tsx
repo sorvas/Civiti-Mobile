@@ -5,6 +5,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Localization } from '@/constants/localization';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useNotificationBadge } from '@/hooks/use-notifications';
 import { useAuth } from '@/store/auth-context';
 
 type TabPressEvent = { preventDefault: () => void };
@@ -13,6 +14,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const scheme = colorScheme ?? 'light';
   const { session, loading } = useAuth();
+  const { badgeCount, clearBadge } = useNotificationBadge();
 
   const guardedTabPress = (e: TabPressEvent) => {
     if (loading) {
@@ -66,8 +68,22 @@ export default function TabLayout() {
         options={{
           title: Localization.tabs.profile,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarBadge: badgeCount > 0 ? (badgeCount > 99 ? '99+' : badgeCount) : undefined,
         }}
-        listeners={{ tabPress: guardedTabPress }}
+        listeners={{
+          tabPress: (e: TabPressEvent) => {
+            if (loading) {
+              e.preventDefault();
+              return;
+            }
+            if (!session) {
+              e.preventDefault();
+              router.push('/login');
+              return;
+            }
+            clearBadge();
+          },
+        }}
       />
     </Tabs>
   );

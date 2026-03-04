@@ -533,6 +533,17 @@ export const Localization = {
     toggleFailed: 'Actualizarea setării a eșuat.',
   },
 
+  // Notifications
+  notifications: {
+    permissionTitle: 'Notificări',
+    permissionMessage: 'Dorești să primești notificări despre actualizările problemelor tale și realizări?',
+    permissionAllow: 'Permite',
+    permissionDeny: 'Nu acum',
+    permissionDeniedTitle: 'Notificări dezactivate',
+    permissionDeniedMessage: 'Poți activa notificările oricând din Setări.',
+    registrationFailed: 'Înregistrarea pentru notificări a eșuat.',
+  },
+
   // Placeholder captions (dev-only, describes which story builds the real screen)
   placeholderCaptions: {
     issues: 'Placeholder — S06 will build the full issues list.',
