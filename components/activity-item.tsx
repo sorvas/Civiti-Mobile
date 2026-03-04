@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Localization } from '@/constants/localization';
 import { BorderRadius, Shadows, Spacing } from '@/constants/spacing';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import type { ActivityResponse } from '@/types/activity';
@@ -29,30 +28,6 @@ const ICON_MAP: Record<ActivityType, IconConfig> = {
   [ActivityType.NewComment]: { name: 'text.bubble.fill', colorToken: 'textSecondary' },
 };
 
-function getLeadInText(activity: ActivityResponse): string {
-  const t = Localization.activity;
-  const actor = activity.actorDisplayName;
-
-  switch (activity.type) {
-    case ActivityType.NewComment:
-      return actor ? `${actor} a comentat` : t.newComment;
-    case ActivityType.StatusChange:
-      return actor ? `${actor} a actualizat statusul` : t.statusChange;
-    case ActivityType.IssueApproved:
-      return t.issueApproved;
-    case ActivityType.IssueResolved:
-      return t.issueResolved;
-    case ActivityType.IssueCreated:
-      return actor ? `${actor} a raportat` : t.issueCreated;
-    case ActivityType.NewSupporters:
-      return t.newSupporters(
-        Number.isFinite(activity.aggregatedCount) ? activity.aggregatedCount : 0,
-      );
-    default:
-      return t.title;
-  }
-}
-
 export const ActivityItem = memo(function ActivityItem({ activity, onPress }: ActivityItemProps) {
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
@@ -61,7 +36,7 @@ export const ActivityItem = memo(function ActivityItem({ activity, onPress }: Ac
   const icon = ICON_MAP[activity.type] ?? ICON_MAP[ActivityType.IssueCreated];
   const iconColor = useThemeColor({}, icon.colorToken);
 
-  const message = activity.message ?? getLeadInText(activity);
+  const message = activity.message ?? '';
 
   return (
     <Pressable

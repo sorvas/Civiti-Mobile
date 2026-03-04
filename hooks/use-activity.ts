@@ -25,7 +25,10 @@ export function useRecentActivity() {
   });
 
   const activities = useMemo(
-    () => query.data?.pages.flatMap((page) => page.items ?? []) ?? [],
+    () =>
+      query.data?.pages
+        .flatMap((page) => page.items ?? [])
+        .filter((item) => !!item.message) ?? [],
     [query.data],
   );
 
