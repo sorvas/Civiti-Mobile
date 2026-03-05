@@ -91,7 +91,7 @@ export const StatusBadgeColors: Record<'light' | 'dark', Record<IssueStatus, Bad
   },
   dark: {
     Draft:       { fg: '#94A3B8', bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)' },
-    Submitted:   { fg: '#60A5FA', bg: '#1A3A47', border: 'rgba(96,165,250,0.3)' },
+    Submitted:   { fg: '#93C5FD', bg: '#1E2D3D', border: 'rgba(147,197,253,0.3)' },
     UnderReview: { fg: '#FBBF24', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)' },
     Active:      { fg: '#60A5FA', bg: '#1A3A47', border: 'rgba(96,165,250,0.3)' },
     Resolved:    { fg: '#4ADE80', bg: '#14532D', border: 'rgba(74,222,128,0.3)' },

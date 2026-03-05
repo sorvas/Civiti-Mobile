@@ -20,7 +20,7 @@ const APPROVED_COLORS = new Set([
   // Semantic (dark)
   '#4ADE80', '#14532D', '#F87171', '#450A0A', '#60A5FA', '#1A3A47',
   // Status/Urgency dark variants
-  '#94A3B8', '#FBBF24', '#FB923C',
+  '#94A3B8', '#FBBF24', '#FB923C', '#93C5FD', '#1E2D3D',
   // Button dark danger pressed
   '#D46060',
   // Dark mode

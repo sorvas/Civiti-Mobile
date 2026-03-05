@@ -63,7 +63,7 @@ Visual conventions for Civiti-Mobile. Matches civiti.ro web brand. All values in
 | Status | Foreground | Background | Border |
 |---|---|---|---|
 | Draft / Cancelled | `#94A3B8` | `rgba(100,116,139,0.15)` | `rgba(100,116,139,0.3)` |
-| Submitted | `#60A5FA` | `#1A3A47` | `rgba(96,165,250,0.3)` |
+| Submitted | `#93C5FD` | `#1E2D3D` | `rgba(147,197,253,0.3)` |
 | UnderReview | `#FBBF24` | `rgba(245,158,11,0.15)` | `rgba(245,158,11,0.3)` |
 | Active | `#60A5FA` | `#1A3A47` | `rgba(96,165,250,0.3)` |
 | Resolved | `#4ADE80` | `#14532D` | `rgba(74,222,128,0.3)` |
