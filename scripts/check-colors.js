@@ -19,6 +19,8 @@ const APPROVED_COLORS = new Set([
   '#28A745', '#DCFCE7', '#DC3545', '#FFF1F0', '#1890FF', '#E6F7FF',
   // Semantic (dark)
   '#4ADE80', '#14532D', '#F87171', '#450A0A', '#60A5FA', '#1A3A47',
+  // Status/Urgency dark variants
+  '#94A3B8', '#FBBF24', '#FB923C',
   // Dark mode
   '#ECEDEE', '#151718', '#1E2022', '#262A2C', '#3A3F42',
   // Status — Draft/Cancelled

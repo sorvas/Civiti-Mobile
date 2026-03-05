@@ -17,7 +17,14 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   if (!colors) {
     if (__DEV__) console.warn(`[StatusBadge] Unknown status "${status}"`);
-    return null;
+    const fallback = StatusBadgeColors[scheme].Draft;
+    return (
+      <View style={[styles.badge, { backgroundColor: fallback.bg, borderColor: fallback.border }]}>
+        <ThemedText type="badge" style={{ color: fallback.fg }}>
+          {String(status)}
+        </ThemedText>
+      </View>
+    );
   }
 
   return (
