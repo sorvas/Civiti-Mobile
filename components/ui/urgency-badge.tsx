@@ -13,11 +13,13 @@ type UrgencyBadgeProps = {
 
 export function UrgencyBadge({ level }: UrgencyBadgeProps) {
   const scheme = (useColorScheme() ?? 'light') as 'light' | 'dark';
-  const colors = UrgencyBadgeColors[scheme][level] ?? UrgencyBadgeColors[scheme].Low;
+  const colors = UrgencyBadgeColors[scheme][level];
+  if (!colors && __DEV__) console.warn(`[UrgencyBadge] Unknown level "${level}", falling back to Low`);
+  const resolvedColors = colors ?? UrgencyBadgeColors[scheme].Low;
 
   return (
-    <View style={[styles.badge, { backgroundColor: colors.bg }]}>
-      <ThemedText type="badge" style={{ color: colors.fg }}>
+    <View style={[styles.badge, { backgroundColor: resolvedColors.bg }]}>
+      <ThemedText type="badge" style={{ color: resolvedColors.fg }}>
         {Localization.urgency[level]}
       </ThemedText>
     </View>
@@ -29,6 +31,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxs,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.xs,
+    borderCurve: 'continuous',
     alignSelf: 'flex-start',
   },
 });

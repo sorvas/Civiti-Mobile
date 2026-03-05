@@ -12,7 +12,8 @@ export function ProgressBar({ progress, fillColor, style, ...rest }: ProgressBar
   const trackColor = useThemeColor({}, 'border');
   const accent = useThemeColor({}, 'accent');
   const fill = fillColor ?? accent;
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
+  const safeProgress = Number.isFinite(progress) ? progress : 0;
+  const clampedProgress = Math.min(Math.max(safeProgress, 0), 1);
 
   return (
     <View
@@ -39,10 +40,12 @@ const styles = StyleSheet.create({
   track: {
     height: 8,
     borderRadius: BorderRadius.xs,
+    borderCurve: 'continuous',
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
     borderRadius: BorderRadius.xs,
+    borderCurve: 'continuous',
   },
 });

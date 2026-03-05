@@ -70,7 +70,7 @@ export default function MyIssuesScreen() {
 
   const handleEdit = useCallback(
     (id: string) => {
-      router.push(`/issues/${id}/edit` as any);
+      router.push({ pathname: '/issues/[id]/edit', params: { id } } as any);
     },
     [router],
   );

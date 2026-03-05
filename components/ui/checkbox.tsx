@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { BorderRadius, Spacing } from '@/constants/spacing';
+import { BrandColors } from '@/constants/theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 type CheckboxProps = {
@@ -33,7 +34,7 @@ export function Checkbox({ checked, onToggle, label }: CheckboxProps) {
         ]}
       >
         {checked && (
-          <IconSymbol name="checkmark" size={16} color="#FFFFFF" />
+          <IconSymbol name="checkmark" size={16} color={BrandColors.oxfordBlue} />
         )}
       </View>
       {label ? <ThemedText type="body" style={styles.label}>{label}</ThemedText> : null}

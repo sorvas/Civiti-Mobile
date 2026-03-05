@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
     right: Spacing.xs,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: BorderRadius.full,
+    borderCurve: 'continuous',
     width: 28,
     height: 28,
     alignItems: 'center',

@@ -15,6 +15,11 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const scheme = (useColorScheme() ?? 'light') as 'light' | 'dark';
   const colors = StatusBadgeColors[scheme][status];
 
+  if (!colors) {
+    if (__DEV__) console.warn(`[StatusBadge] Unknown status "${status}"`);
+    return null;
+  }
+
   return (
     <View
       style={[
@@ -34,6 +39,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxs,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.xs,
+    borderCurve: 'continuous',
     borderWidth: 1,
     alignSelf: 'flex-start',
   },

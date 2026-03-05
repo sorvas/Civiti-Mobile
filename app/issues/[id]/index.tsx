@@ -117,8 +117,8 @@ function StatisticsRow({ issue }: { issue: IssueDetailResponse }) {
   const accent = useThemeColor({}, 'accent');
 
   const stats = [
-    { label: Localization.detail.emailsSent, value: issue.emailsSent, color: accent },
-    { label: Localization.detail.votes, value: issue.communityVotes, color: accent },
+    { label: Localization.detail.emailsSent, value: Number.isFinite(issue.emailsSent) ? issue.emailsSent : 0, color: accent },
+    { label: Localization.detail.votes, value: Number.isFinite(issue.communityVotes) ? issue.communityVotes : 0, color: accent },
     {
       label: Localization.detail.authoritiesCount,
       value: issue.authorities?.length ?? 0,
@@ -414,6 +414,10 @@ export default function IssueDetailScreen() {
         onSuccess: () => {
           setEditingCommentId(null);
           setEditText('');
+        },
+        onError: (err) => {
+          console.warn('[comments] Failed to update comment', editingCommentId, err);
+          Alert.alert(Localization.errors.generic);
         },
       },
     );

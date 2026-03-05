@@ -38,7 +38,7 @@ function PhotoItem({
   const handlePress = useCallback(() => onPress(item.id), [onPress, item.id]);
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable onPress={handlePress} accessibilityRole="button">
       <Image
         source={{ uri: item.url }}
         style={[styles.photo, { width }]}
@@ -75,7 +75,7 @@ export function PhotoGallery({ photos }: PhotoGalleryProps) {
 
   const handlePhotoPress = useCallback((id: string) => {
     // TODO(S09): Fullscreen photo viewer
-    console.log('[S09] Fullscreen photo viewer:', id);
+    if (__DEV__) console.log('[S09] Fullscreen photo viewer:', id);
   }, []);
 
   const getItemLayout = useCallback(
