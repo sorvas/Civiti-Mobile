@@ -106,6 +106,7 @@ export function useNotifications(): NotificationBadgeValue {
   const prevSessionRef = useRef<typeof session | undefined>(undefined);
   const sessionRef = useRef(session);
   useEffect(() => { sessionRef.current = session; }, [session]);
+  const coldStartResponseRef = useRef<Notifications.NotificationResponse | null>(null);
 
   const clearBadge = useCallback(() => {
     setBadgeCount(0);
@@ -115,6 +116,14 @@ export function useNotifications(): NotificationBadgeValue {
   // Sign-in: request permission + register token
   useEffect(() => {
     if (!session) return;
+
+    // Process deferred cold-start notification now that session is available
+    const deferred = coldStartResponseRef.current;
+    if (deferred) {
+      coldStartResponseRef.current = null;
+      const route = parseNotificationRoute(deferred.notification.request.content);
+      if (route) navigateFromNotification(route);
+    }
 
     let cancelled = false;
 
@@ -293,12 +302,14 @@ export function useNotifications(): NotificationBadgeValue {
             const id = response.notification.request.identifier;
             if (!handledIds.has(id)) {
               handledIds.add(id);
-              if (!sessionRef.current) return;
-              const route = parseNotificationRoute(
-                response.notification.request.content,
-              );
-              if (route) {
-                navigateFromNotification(route);
+              if (sessionRef.current) {
+                const route = parseNotificationRoute(
+                  response.notification.request.content,
+                );
+                if (route) navigateFromNotification(route);
+              } else {
+                // Session not yet restored — defer until sign-in effect runs
+                coldStartResponseRef.current = response;
               }
             }
           }
