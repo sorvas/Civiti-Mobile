@@ -59,7 +59,8 @@
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
         }
-      ]
+      ],
+      ["expo-notifications", { "color": "#FCA311", "sounds": [] }]
     ],
     "experiments": {
       "typedRoutes": true,

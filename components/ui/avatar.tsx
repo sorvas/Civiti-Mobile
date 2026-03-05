@@ -13,12 +13,14 @@ type AvatarProps = {
 };
 
 function getInitials(name: string): string {
-  return name
+  const result = name
     .split(' ')
+    .filter((part) => part.length > 0)
     .slice(0, 2)
     .map((part) => part[0])
     .join('')
     .toUpperCase();
+  return result || '?';
 }
 
 export function Avatar({ uri, name, size = 40 }: AvatarProps) {
@@ -31,6 +33,7 @@ export function Avatar({ uri, name, size = 40 }: AvatarProps) {
     width: size,
     height: size,
     borderRadius: BorderRadius.full,
+    borderCurve: 'continuous' as const,
     backgroundColor,
   };
 
@@ -49,7 +52,11 @@ export function Avatar({ uri, name, size = 40 }: AvatarProps) {
   }
 
   return (
-    <View style={[styles.fallback, containerStyle]}>
+    <View
+      style={[styles.fallback, containerStyle]}
+      accessibilityRole="image"
+      accessibilityLabel={name ? `Avatar: ${name}` : 'Avatar'}
+    >
       <ThemedText
         type="bodyBold"
         style={{ fontSize: size * 0.4, lineHeight: size * 0.5 }}
