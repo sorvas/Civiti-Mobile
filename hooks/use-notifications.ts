@@ -212,13 +212,14 @@ export function useNotifications(): NotificationBadgeValue {
                     // Don't set asked flag — allow retry on next sign-in
                     return;
                   }
-                  void AsyncStorage.setItem(
-                    PUSH_PERMISSION_ASKED_KEY,
-                    'true',
-                  ).catch((err: unknown) => {
-                    console.warn('[notifications] Failed to persist permission-asked flag:', err);
-                  });
                 }
+                // Set flag whether or not token was acquired — OS permission was granted
+                void AsyncStorage.setItem(
+                  PUSH_PERMISSION_ASKED_KEY,
+                  'true',
+                ).catch((err: unknown) => {
+                  console.warn('[notifications] Failed to persist permission-asked flag:', err);
+                });
               } catch (error) {
                 console.warn('[notifications] Setup failed:', error);
                 Alert.alert(
