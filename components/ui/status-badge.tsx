@@ -35,7 +35,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       ]}
     >
       <ThemedText type="badge" style={{ color: colors.fg }}>
-        {Localization.status[status]}
+        {Localization.status[status] ?? status}
       </ThemedText>
     </View>
   );
