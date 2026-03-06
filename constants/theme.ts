@@ -104,10 +104,10 @@ export const StatusBadgeColors: Record<'light' | 'dark', Record<IssueStatus, Bad
 
 export const UrgencyBadgeColors: Record<'light' | 'dark', Record<UrgencyLevel, BadgeStyle>> = {
   light: {
-    Low:    { fg: '#28A745', bg: '#DCFCE7', border: '#DCFCE7' },
-    Medium: { fg: '#F59E0B', bg: '#FEF3C7', border: '#FEF3C7' },
-    High:   { fg: '#F97316', bg: '#FFEDD5', border: '#FFEDD5' },
-    Urgent: { fg: '#DC3545', bg: '#FFF1F0', border: '#FFF1F0' },
+    Low:    { fg: '#28A745', bg: '#DCFCE7', border: 'transparent' },
+    Medium: { fg: '#F59E0B', bg: '#FEF3C7', border: 'transparent' },
+    High:   { fg: '#F97316', bg: '#FFEDD5', border: 'transparent' },
+    Urgent: { fg: '#DC3545', bg: '#FFF1F0', border: 'transparent' },
   },
   dark: {
     Low:    { fg: '#4ADE80', bg: '#14532D', border: 'rgba(74,222,128,0.3)' },

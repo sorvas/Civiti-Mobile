@@ -45,8 +45,7 @@ function PhotoItem({
         contentFit="cover"
         transition={200}
         recyclingKey={item.id}
-        accessibilityRole="image"
-        accessibilityLabel={item.description || Localization.detail.photoAlt}
+        accessible={false}
       />
     </Pressable>
   );
