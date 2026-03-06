@@ -8,19 +8,19 @@ import { UrgencyBadgeColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type UrgencyBadgeProps = {
-  level: UrgencyLevel;
+  level: UrgencyLevel | (string & {});
 };
 
 export function UrgencyBadge({ level }: UrgencyBadgeProps) {
   const scheme = (useColorScheme() ?? 'light') as 'light' | 'dark';
-  const colors = UrgencyBadgeColors[scheme][level];
+  const colors = UrgencyBadgeColors[scheme][level as UrgencyLevel];
   if (!colors) console.warn(`[UrgencyBadge] Unknown level "${level}", falling back to Low`);
   const resolvedColors = colors ?? UrgencyBadgeColors[scheme].Low;
 
   return (
     <View style={[styles.badge, { backgroundColor: resolvedColors.bg }]}>
       <ThemedText type="badge" style={{ color: resolvedColors.fg }}>
-        {Localization.urgency[level] ?? Localization.urgency.Low}
+        {Localization.urgency[level as UrgencyLevel] ?? Localization.urgency.Low}
       </ThemedText>
     </View>
   );

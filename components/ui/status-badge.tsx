@@ -8,12 +8,12 @@ import { StatusBadgeColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type StatusBadgeProps = {
-  status: IssueStatus;
+  status: IssueStatus | (string & {});
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const scheme = (useColorScheme() ?? 'light') as 'light' | 'dark';
-  const colors = StatusBadgeColors[scheme][status];
+  const colors = StatusBadgeColors[scheme][status as IssueStatus];
 
   if (!colors) {
     console.warn(`[StatusBadge] Unknown status "${status}"`);
@@ -35,7 +35,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       ]}
     >
       <ThemedText type="badge" style={{ color: colors.fg }}>
-        {Localization.status[status] ?? status}
+        {Localization.status[status as IssueStatus] ?? status}
       </ThemedText>
     </View>
   );
