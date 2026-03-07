@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import ClusteredMapView from 'react-native-map-clustering';
+import { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { IssueMiniCard } from '@/components/issue-mini-card';
 import { ThemedText } from '@/components/themed-text';
 import { Localization } from '@/constants/localization';
 import { Spacing } from '@/constants/spacing';
-import { CategoryColors } from '@/constants/theme';
+import { BrandColors, CategoryColors, Fonts } from '@/constants/theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import type { IssueListResponse } from '@/types/issues';
 
@@ -60,11 +61,17 @@ export function IssueMapView({ issues, onIssuePress }: IssueMapViewProps) {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <ClusteredMapView
         style={styles.map}
         provider={PROVIDER_DEFAULT}
         initialRegion={INITIAL_REGION}
         onPress={handleMapPress}
+        clusterColor={BrandColors.orangeWeb}
+        clusterTextColor={BrandColors.oxfordBlue}
+        clusterFontFamily={Fonts.bold}
+        minPoints={2}
+        radius={50}
+        animationEnabled={false}
       >
         {mappableIssues.map((issue) => (
           <IssueMarker
@@ -73,7 +80,7 @@ export function IssueMapView({ issues, onIssuePress }: IssueMapViewProps) {
             onPress={handleMarkerPress}
           />
         ))}
-      </MapView>
+      </ClusteredMapView>
 
       {/* Empty state overlay */}
       {mappableIssues.length === 0 && (

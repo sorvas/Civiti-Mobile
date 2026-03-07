@@ -45,7 +45,6 @@ import { buildMailto } from '@/utils/build-mailto';
 import { formatTimeAgo } from '@/utils/format-time-ago';
 
 const NOOP = () => {};
-const BOTTOM_BAR_HEIGHT = 140;
 
 function isValidIssueStatus(s: string): s is (typeof IssueStatus)[keyof typeof IssueStatus] {
   return (Object.values(IssueStatus) as string[]).includes(s);
@@ -207,6 +206,7 @@ function CommentsSection({
   onStartEdit: (comment: CommentResponse) => void;
 }) {
   const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const [expandedThreads, setCollapsedThreads] = useState<Set<string>>(new Set());
   const textSecondary = useThemeColor({}, 'textSecondary');
   const accent = useThemeColor({}, 'accent');
 
@@ -221,6 +221,18 @@ function CommentsSection({
 
   const toggleSort = useCallback(() => {
     setSortMode((prev) => (prev === 'newest' ? 'mostHelpful' : 'newest'));
+  }, []);
+
+  const toggleThread = useCallback((commentId: string) => {
+    setCollapsedThreads((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) {
+        next.delete(commentId);
+      } else {
+        next.add(commentId);
+      }
+      return next;
+    });
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -249,27 +261,72 @@ function CommentsSection({
         </ThemedText>
       ) : (
         <>
-          {comments.map((comment) => {
-            const parentComment = comment.parentCommentId
-              ? comments.find((c) => c.id === comment.parentCommentId)
-              : null;
-            return (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                issueId={issueId}
-                currentUserId={currentUserId}
-                parentAuthorName={parentComment?.user.displayName ?? null}
-                onReply={onReply}
-                onStartEdit={onStartEdit}
-                isEditing={editingCommentId === comment.id}
-                editText={editingCommentId === comment.id ? editText : ''}
-                onEditTextChange={onEditTextChange}
-                onEditSave={onEditSave}
-                onEditCancel={onEditCancel}
-              />
+          {(() => {
+            // Group replies under their parent comments
+            const topLevel = comments.filter((c) => !c.parentCommentId);
+            const repliesByParent = new Map<string, CommentResponse[]>();
+            for (const c of comments) {
+              if (c.parentCommentId) {
+                const list = repliesByParent.get(c.parentCommentId) ?? [];
+                list.push(c);
+                repliesByParent.set(c.parentCommentId, list);
+              }
+            }
+
+            // Orphan replies whose parent isn't in the current page
+            const orphans = comments.filter(
+              (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
             );
-          })}
+
+            const threaded = [...topLevel, ...orphans];
+
+            return threaded.map((comment) => {
+              const replies = repliesByParent.get(comment.id) ?? [];
+              const isExpanded = expandedThreads.has(comment.id);
+              return (
+                <View key={comment.id} style={commentThreadStyles.thread}>
+                  <CommentItem
+                    comment={comment}
+                    issueId={issueId}
+                    currentUserId={currentUserId}
+                    parentAuthorName={null}
+                    onReply={onReply}
+                    onStartEdit={onStartEdit}
+                    isEditing={editingCommentId === comment.id}
+                    editText={editingCommentId === comment.id ? editText : ''}
+                    onEditTextChange={onEditTextChange}
+                    onEditSave={onEditSave}
+                    onEditCancel={onEditCancel}
+                    repliesExpanded={isExpanded}
+                    onToggleReplies={
+                      replies.length > 0
+                        ? () => toggleThread(comment.id)
+                        : undefined
+                    }
+                  />
+                  {isExpanded
+                    ? replies.map((reply) => (
+                        <CommentItem
+                          key={reply.id}
+                          comment={reply}
+                          issueId={issueId}
+                          currentUserId={currentUserId}
+                          parentAuthorName={comment.user.displayName ?? null}
+                          onReply={onReply}
+                          onStartEdit={onStartEdit}
+                          isEditing={editingCommentId === reply.id}
+                          editText={editingCommentId === reply.id ? editText : ''}
+                          onEditTextChange={onEditTextChange}
+                          onEditSave={onEditSave}
+                          onEditCancel={onEditCancel}
+                          isReply
+                        />
+                      ))
+                    : null}
+                </View>
+              );
+            });
+          })()}
           {hasNextPage ? (
             <Pressable
               onPress={handleLoadMore}
@@ -558,10 +615,11 @@ export default function IssueDetailScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         ref={scrollViewRef}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -632,8 +690,6 @@ export default function IssueDetailScreen() {
           onStartEdit={handleStartEdit}
         />
 
-        {/* Bottom spacer for sticky bar */}
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Sticky Bottom Bar — combined vote/email + comment input */}
@@ -661,6 +717,9 @@ export default function IssueDetailScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
@@ -730,10 +789,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'column',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
@@ -747,9 +802,6 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     flex: 1,
-  },
-  bottomSpacer: {
-    height: BOTTOM_BAR_HEIGHT,
   },
   backButtonError: {
     width: 44,
@@ -781,5 +833,11 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: 1,
     marginTop: Spacing.md,
+  },
+});
+
+const commentThreadStyles = StyleSheet.create({
+  thread: {
+    gap: Spacing.sm,
   },
 });

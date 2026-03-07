@@ -25,6 +25,9 @@ type CommentItemProps = {
   onEditTextChange: (text: string) => void;
   onEditSave: () => void;
   onEditCancel: () => void;
+  isReply?: boolean;
+  repliesExpanded?: boolean;
+  onToggleReplies?: () => void;
 };
 
 export function CommentItem({
@@ -39,6 +42,9 @@ export function CommentItem({
   onEditTextChange,
   onEditSave,
   onEditCancel,
+  isReply = false,
+  repliesExpanded,
+  onToggleReplies,
 }: CommentItemProps) {
   const textSecondary = useThemeColor({}, 'textSecondary');
   const border = useThemeColor({}, 'border');
@@ -89,11 +95,20 @@ export function CommentItem({
   }, [isDeletePending, deleteCommentFn, comment.id]);
 
   return (
-    <View style={[styles.container, { borderBottomColor: border }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: surface,
+          borderColor: border,
+        },
+        isReply && styles.replyContainer,
+      ]}
+    >
       {/* Reply-to indicator */}
       {comment.parentCommentId ? (
         <View style={styles.replyIndicator}>
-          <View style={[styles.replyLine, { backgroundColor: border }]} />
+          <View style={[styles.replyLine, { backgroundColor: accent }]} />
           {parentAuthorName ? (
             <ThemedText type="caption" style={{ color: textSecondary }}>
               {Localization.comments.replyIndicator(parentAuthorName)}
@@ -237,17 +252,30 @@ export function CommentItem({
             </View>
           ) : null}
 
-          {/* Reply count (top-level comments only) */}
-          {comment.replyCount > 0 && !comment.parentCommentId ? (
-            <View style={styles.replyCount}>
-              <IconSymbol name="text.bubble.fill" size={14} color={textSecondary} />
-              <ThemedText type="caption" style={{ color: textSecondary }}>
-                {comment.replyCount}{' '}
-                {comment.replyCount === 1
-                  ? Localization.comments.reply
-                  : Localization.comments.replies}
+          {/* Reply count toggle (top-level comments only) */}
+          {comment.replyCount > 0 && !comment.parentCommentId && onToggleReplies ? (
+            <Pressable
+              onPress={onToggleReplies}
+              style={styles.replyToggle}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={
+                repliesExpanded
+                  ? Localization.comments.hideReplies
+                  : Localization.comments.showReplies(comment.replyCount)
+              }
+            >
+              <IconSymbol
+                name={repliesExpanded ? 'chevron.up' : 'chevron.down'}
+                size={12}
+                color={accent}
+              />
+              <ThemedText type="caption" style={{ color: accent }}>
+                {repliesExpanded
+                  ? Localization.comments.hideReplies
+                  : Localization.comments.showReplies(comment.replyCount)}
               </ThemedText>
-            </View>
+            </Pressable>
           ) : null}
         </View>
       </View>
@@ -257,14 +285,18 @@ export function CommentItem({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderRadius: BorderRadius.sm,
+    borderCurve: 'continuous',
+  },
+  replyContainer: {
+    marginLeft: Spacing['2xl'],
   },
   replyIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    paddingLeft: Spacing.lg,
     marginBottom: Spacing.xs,
   },
   replyLine: {
@@ -303,11 +335,12 @@ const styles = StyleSheet.create({
     minHeight: 32,
     minWidth: 44,
   },
-  replyCount: {
+  replyToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
     marginTop: Spacing.xs,
+    minHeight: 32,
   },
   editContainer: {
     gap: Spacing.sm,
