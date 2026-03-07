@@ -221,6 +221,7 @@ function CommentsSection({
 
   const toggleSort = useCallback(() => {
     setSortMode((prev) => (prev === 'newest' ? 'mostHelpful' : 'newest'));
+    setExpandedThreads(new Set());
   }, []);
 
   const toggleThread = useCallback((commentId: string) => {

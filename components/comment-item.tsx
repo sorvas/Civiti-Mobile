@@ -257,34 +257,30 @@ export function CommentItem({
           ) : null}
 
           {/* Reply count toggle (top-level comments only) */}
-          {onToggleReplies ? (() => {
-            const count = replyCountOverride ?? comment.replyCount;
-            if (count <= 0 || isReply) return null;
-            return (
-              <Pressable
-                onPress={handleToggleReplies}
-                style={styles.replyToggle}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  repliesExpanded
-                    ? Localization.comments.hideReplies
-                    : Localization.comments.showReplies(count)
-                }
-              >
-                <IconSymbol
-                  name={repliesExpanded ? 'chevron.up' : 'chevron.down'}
-                  size={12}
-                  color={accent}
-                />
-                <ThemedText type="caption" style={{ color: accent }}>
-                  {repliesExpanded
-                    ? Localization.comments.hideReplies
-                    : Localization.comments.showReplies(count)}
-                </ThemedText>
-              </Pressable>
-            );
-          })() : null}
+          {onToggleReplies && (replyCountOverride ?? comment.replyCount) > 0 && !isReply ? (
+            <Pressable
+              onPress={handleToggleReplies}
+              style={styles.replyToggle}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={
+                repliesExpanded
+                  ? Localization.comments.hideReplies
+                  : Localization.comments.showReplies(replyCountOverride ?? comment.replyCount)
+              }
+            >
+              <IconSymbol
+                name={repliesExpanded ? 'chevron.up' : 'chevron.down'}
+                size={12}
+                color={accent}
+              />
+              <ThemedText type="caption" style={{ color: accent }}>
+                {repliesExpanded
+                  ? Localization.comments.hideReplies
+                  : Localization.comments.showReplies(replyCountOverride ?? comment.replyCount)}
+              </ThemedText>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </View>
