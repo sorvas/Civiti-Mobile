@@ -257,7 +257,7 @@ export function CommentItem({
           {/* Reply count toggle (top-level comments only) */}
           {onToggleReplies ? (() => {
             const count = replyCountOverride ?? comment.replyCount;
-            if (count <= 0 || comment.parentCommentId) return null;
+            if (count <= 0 || isReply) return null;
             return (
               <Pressable
                 onPress={onToggleReplies}
