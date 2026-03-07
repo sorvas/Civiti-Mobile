@@ -241,8 +241,9 @@ function CommentsSection({
 
   const threaded = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
+    const commentIds = new Set(comments.map((c) => c.id));
     const orphans = comments.filter(
-      (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
+      (c) => c.parentCommentId && !commentIds.has(c.parentCommentId),
     );
     const items = [...topLevel, ...orphans];
     const itemIds = new Set(items.map((c) => c.id));
