@@ -241,18 +241,20 @@ function CommentsSection({
 
   const threaded = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
+    const orphans = comments.filter(
+      (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
+    );
+    const items = [...topLevel, ...orphans];
+    const itemIds = new Set(items.map((c) => c.id));
     const repliesByParent = new Map<string, CommentResponse[]>();
     for (const c of comments) {
-      if (c.parentCommentId) {
+      if (c.parentCommentId && itemIds.has(c.parentCommentId)) {
         const list = repliesByParent.get(c.parentCommentId) ?? [];
         list.push(c);
         repliesByParent.set(c.parentCommentId, list);
       }
     }
-    const orphans = comments.filter(
-      (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
-    );
-    return { items: [...topLevel, ...orphans], repliesByParent };
+    return { items, repliesByParent };
   }, [comments]);
 
   return (

@@ -111,15 +111,13 @@ export function CommentItem({
         isReply && styles.replyContainer,
       ]}
     >
-      {/* Reply-to indicator */}
-      {comment.parentCommentId ? (
+      {/* Reply-to indicator — hidden for orphan replies where parent is off-page */}
+      {comment.parentCommentId && parentAuthorName ? (
         <View style={styles.replyIndicator}>
           <View style={[styles.replyLine, { backgroundColor: accent }]} />
-          {parentAuthorName ? (
-            <ThemedText type="caption" style={{ color: textSecondary }}>
-              {Localization.comments.replyIndicator(parentAuthorName)}
-            </ThemedText>
-          ) : null}
+          <ThemedText type="caption" style={{ color: textSecondary }}>
+            {Localization.comments.replyIndicator(parentAuthorName)}
+          </ThemedText>
         </View>
       ) : null}
 
