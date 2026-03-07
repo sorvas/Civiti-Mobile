@@ -156,6 +156,9 @@ export const Localization = {
     deleted: '[Comentariu șters]',
     reply: 'răspuns',
     replies: 'răspunsuri',
+    showReplies: (count: number) =>
+      `Arată ${count} ${count === 1 ? 'răspuns' : 'răspunsuri'}`,
+    hideReplies: 'Ascunde răspunsurile',
     loadMore: 'Încarcă mai multe',
     sortNewest: 'Cele mai noi',
     sortMostHelpful: 'Cele mai utile',

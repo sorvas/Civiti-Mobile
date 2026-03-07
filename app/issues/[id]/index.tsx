@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -45,7 +45,6 @@ import { buildMailto } from '@/utils/build-mailto';
 import { formatTimeAgo } from '@/utils/format-time-ago';
 
 const NOOP = () => {};
-const BOTTOM_BAR_HEIGHT = 140;
 
 function isValidIssueStatus(s: string): s is (typeof IssueStatus)[keyof typeof IssueStatus] {
   return (Object.values(IssueStatus) as string[]).includes(s);
@@ -195,6 +194,9 @@ function CommentsSection({
   onEditSave,
   onEditCancel,
   onStartEdit,
+  expandedThreads,
+  onToggleThread,
+  onSortChange,
 }: {
   issueId: string;
   currentUserId: string | undefined;
@@ -205,6 +207,9 @@ function CommentsSection({
   onEditSave: () => void;
   onEditCancel: () => void;
   onStartEdit: (comment: CommentResponse) => void;
+  expandedThreads: Set<string>;
+  onToggleThread: (commentId: string) => void;
+  onSortChange: () => void;
 }) {
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const textSecondary = useThemeColor({}, 'textSecondary');
@@ -221,11 +226,31 @@ function CommentsSection({
 
   const toggleSort = useCallback(() => {
     setSortMode((prev) => (prev === 'newest' ? 'mostHelpful' : 'newest'));
-  }, []);
+    onSortChange();
+  }, [onSortChange]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const threaded = useMemo(() => {
+    const topLevel = comments.filter((c) => !c.parentCommentId);
+    const commentIds = new Set(comments.map((c) => c.id));
+    const orphans = comments.filter(
+      (c) => c.parentCommentId && !commentIds.has(c.parentCommentId),
+    );
+    const items = [...topLevel, ...orphans];
+    const itemIds = new Set(items.map((c) => c.id));
+    const repliesByParent = new Map<string, CommentResponse[]>();
+    for (const c of comments) {
+      if (c.parentCommentId && itemIds.has(c.parentCommentId)) {
+        const list = repliesByParent.get(c.parentCommentId) ?? [];
+        list.push(c);
+        repliesByParent.set(c.parentCommentId, list);
+      }
+    }
+    return { items, repliesByParent };
+  }, [comments]);
 
   return (
     <SectionBlock title={`${Localization.comments.title} (${totalComments})`}>
@@ -249,25 +274,71 @@ function CommentsSection({
         </ThemedText>
       ) : (
         <>
-          {comments.map((comment) => {
-            const parentComment = comment.parentCommentId
-              ? comments.find((c) => c.id === comment.parentCommentId)
-              : null;
+          {threaded.items.map((comment) => {
+            const replies = threaded.repliesByParent.get(comment.id) ?? [];
+            const isExpanded = expandedThreads.has(comment.id);
             return (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                issueId={issueId}
-                currentUserId={currentUserId}
-                parentAuthorName={parentComment?.user.displayName ?? null}
-                onReply={onReply}
-                onStartEdit={onStartEdit}
-                isEditing={editingCommentId === comment.id}
-                editText={editingCommentId === comment.id ? editText : ''}
-                onEditTextChange={onEditTextChange}
-                onEditSave={onEditSave}
-                onEditCancel={onEditCancel}
-              />
+              <View key={comment.id} style={commentThreadStyles.thread}>
+                <CommentItem
+                  comment={comment}
+                  issueId={issueId}
+                  currentUserId={currentUserId}
+                  parentAuthorName={null}
+                  onReply={onReply}
+                  onStartEdit={onStartEdit}
+                  isEditing={editingCommentId === comment.id}
+                  editText={editingCommentId === comment.id ? editText : ''}
+                  onEditTextChange={onEditTextChange}
+                  onEditSave={onEditSave}
+                  onEditCancel={onEditCancel}
+                  repliesExpanded={isExpanded}
+                  replyCountOverride={replies.length || comment.replyCount}
+                  onToggleReplies={
+                    replies.length > 0 || comment.replyCount > 0
+                      ? onToggleThread
+                      : undefined
+                  }
+                />
+                {isExpanded
+                  ? replies.length > 0
+                    ? replies.map((reply) => (
+                        <CommentItem
+                          key={reply.id}
+                          comment={reply}
+                          issueId={issueId}
+                          currentUserId={currentUserId}
+                          parentAuthorName={comment.user.displayName ?? null}
+                          onReply={onReply}
+                          onStartEdit={onStartEdit}
+                          isEditing={editingCommentId === reply.id}
+                          editText={editingCommentId === reply.id ? editText : ''}
+                          onEditTextChange={onEditTextChange}
+                          onEditSave={onEditSave}
+                          onEditCancel={onEditCancel}
+                          isReply
+                        />
+                      ))
+                    : hasNextPage
+                      ? (
+                        <Pressable
+                          onPress={handleLoadMore}
+                          disabled={isFetchingNextPage}
+                          style={{ marginLeft: Spacing['2xl'] }}
+                          hitSlop={8}
+                          accessibilityRole="button"
+                        >
+                          {isFetchingNextPage ? (
+                            <ActivityIndicator size="small" />
+                          ) : (
+                            <ThemedText type="link" style={{ color: accent }}>
+                              {Localization.comments.loadMore}
+                            </ThemedText>
+                          )}
+                        </Pressable>
+                      )
+                      : null
+                  : null}
+              </View>
             );
           })}
           {hasNextPage ? (
@@ -301,6 +372,7 @@ function StickyBottomBar({
   emailDisabled,
   replyingTo,
   onClearReply,
+  onReplySuccess,
 }: {
   issueId: string;
   hasVoted: boolean;
@@ -309,6 +381,7 @@ function StickyBottomBar({
   emailDisabled: boolean;
   replyingTo: CommentResponse | null;
   onClearReply: () => void;
+  onReplySuccess: (parentCommentId: string) => void;
 }) {
   const insets = useSafeAreaInsets();
   const surface = useThemeColor({}, 'surface');
@@ -342,6 +415,7 @@ function StickyBottomBar({
         issueId={issueId}
         replyingTo={replyingTo}
         onClearReply={onClearReply}
+        onReplySuccess={onReplySuccess}
       />
     </View>
   );
@@ -385,6 +459,32 @@ export default function IssueDetailScreen() {
   const [replyingTo, setReplyingTo] = useState<CommentResponse | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+
+  const toggleThread = useCallback((commentId: string) => {
+    setExpandedThreads((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) {
+        next.delete(commentId);
+      } else {
+        next.add(commentId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSortChange = useCallback(() => {
+    setExpandedThreads(new Set());
+  }, []);
+
+  const handleReplySuccess = useCallback((parentCommentId: string) => {
+    setExpandedThreads((prev) => {
+      if (prev.has(parentCommentId)) return prev;
+      const next = new Set(prev);
+      next.add(parentCommentId);
+      return next;
+    });
+  }, []);
 
   const handleReply = useCallback((comment: CommentResponse) => {
     setEditingCommentId(null);
@@ -558,10 +658,11 @@ export default function IssueDetailScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         ref={scrollViewRef}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -630,10 +731,11 @@ export default function IssueDetailScreen() {
           onEditSave={handleEditSave}
           onEditCancel={handleEditCancel}
           onStartEdit={handleStartEdit}
+          expandedThreads={expandedThreads}
+          onToggleThread={toggleThread}
+          onSortChange={handleSortChange}
         />
 
-        {/* Bottom spacer for sticky bar */}
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Sticky Bottom Bar — combined vote/email + comment input */}
@@ -645,6 +747,7 @@ export default function IssueDetailScreen() {
         emailDisabled={!hasAuthorityWithEmail}
         replyingTo={replyingTo}
         onClearReply={handleClearReply}
+        onReplySuccess={handleReplySuccess}
       />
 
       {/* Email Confirmation Prompt */}
@@ -661,6 +764,9 @@ export default function IssueDetailScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
@@ -730,10 +836,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'column',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
@@ -747,9 +849,6 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     flex: 1,
-  },
-  bottomSpacer: {
-    height: BOTTOM_BAR_HEIGHT,
   },
   backButtonError: {
     width: 44,
@@ -781,5 +880,11 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: 1,
     marginTop: Spacing.md,
+  },
+});
+
+const commentThreadStyles = StyleSheet.create({
+  thread: {
+    gap: Spacing.sm,
   },
 });
