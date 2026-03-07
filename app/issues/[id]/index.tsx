@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -239,6 +239,22 @@ function CommentsSection({
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const threaded = useMemo(() => {
+    const topLevel = comments.filter((c) => !c.parentCommentId);
+    const repliesByParent = new Map<string, CommentResponse[]>();
+    for (const c of comments) {
+      if (c.parentCommentId) {
+        const list = repliesByParent.get(c.parentCommentId) ?? [];
+        list.push(c);
+        repliesByParent.set(c.parentCommentId, list);
+      }
+    }
+    const orphans = comments.filter(
+      (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
+    );
+    return { items: [...topLevel, ...orphans], repliesByParent };
+  }, [comments]);
+
   return (
     <SectionBlock title={`${Localization.comments.title} (${totalComments})`}>
       {totalComments > 0 ? (
@@ -261,93 +277,73 @@ function CommentsSection({
         </ThemedText>
       ) : (
         <>
-          {(() => {
-            // Group replies under their parent comments
-            const topLevel = comments.filter((c) => !c.parentCommentId);
-            const repliesByParent = new Map<string, CommentResponse[]>();
-            for (const c of comments) {
-              if (c.parentCommentId) {
-                const list = repliesByParent.get(c.parentCommentId) ?? [];
-                list.push(c);
-                repliesByParent.set(c.parentCommentId, list);
-              }
-            }
-
-            // Orphan replies whose parent isn't in the current page
-            const orphans = comments.filter(
-              (c) => c.parentCommentId && !comments.some((p) => p.id === c.parentCommentId),
+          {threaded.items.map((comment) => {
+            const replies = threaded.repliesByParent.get(comment.id) ?? [];
+            const isExpanded = expandedThreads.has(comment.id);
+            return (
+              <View key={comment.id} style={commentThreadStyles.thread}>
+                <CommentItem
+                  comment={comment}
+                  issueId={issueId}
+                  currentUserId={currentUserId}
+                  parentAuthorName={null}
+                  onReply={onReply}
+                  onStartEdit={onStartEdit}
+                  isEditing={editingCommentId === comment.id}
+                  editText={editingCommentId === comment.id ? editText : ''}
+                  onEditTextChange={onEditTextChange}
+                  onEditSave={onEditSave}
+                  onEditCancel={onEditCancel}
+                  repliesExpanded={isExpanded}
+                  replyCountOverride={replies.length || comment.replyCount}
+                  onToggleReplies={
+                    replies.length > 0 || comment.replyCount > 0
+                      ? toggleThread
+                      : undefined
+                  }
+                />
+                {isExpanded
+                  ? replies.length > 0
+                    ? replies.map((reply) => (
+                        <CommentItem
+                          key={reply.id}
+                          comment={reply}
+                          issueId={issueId}
+                          currentUserId={currentUserId}
+                          parentAuthorName={comment.user.displayName ?? null}
+                          onReply={onReply}
+                          onStartEdit={onStartEdit}
+                          isEditing={editingCommentId === reply.id}
+                          editText={editingCommentId === reply.id ? editText : ''}
+                          onEditTextChange={onEditTextChange}
+                          onEditSave={onEditSave}
+                          onEditCancel={onEditCancel}
+                          isReply
+                        />
+                      ))
+                    : hasNextPage
+                      ? (
+                        <Pressable
+                          onPress={handleLoadMore}
+                          disabled={isFetchingNextPage}
+                          style={{ marginLeft: Spacing['2xl'] }}
+                          hitSlop={8}
+                          accessibilityRole="button"
+                        >
+                          {isFetchingNextPage ? (
+                            <ActivityIndicator size="small" />
+                          ) : (
+                            <ThemedText type="link" style={{ color: accent }}>
+                              {Localization.comments.loadMore}
+                            </ThemedText>
+                          )}
+                        </Pressable>
+                      )
+                      : null
+                  : null}
+              </View>
             );
-
-            const threaded = [...topLevel, ...orphans];
-
-            return threaded.map((comment) => {
-              const replies = repliesByParent.get(comment.id) ?? [];
-              const isExpanded = expandedThreads.has(comment.id);
-              return (
-                <View key={comment.id} style={commentThreadStyles.thread}>
-                  <CommentItem
-                    comment={comment}
-                    issueId={issueId}
-                    currentUserId={currentUserId}
-                    parentAuthorName={null}
-                    onReply={onReply}
-                    onStartEdit={onStartEdit}
-                    isEditing={editingCommentId === comment.id}
-                    editText={editingCommentId === comment.id ? editText : ''}
-                    onEditTextChange={onEditTextChange}
-                    onEditSave={onEditSave}
-                    onEditCancel={onEditCancel}
-                    repliesExpanded={isExpanded}
-                    replyCountOverride={replies.length || comment.replyCount}
-                    onToggleReplies={
-                      replies.length > 0 || comment.replyCount > 0
-                        ? toggleThread
-                        : undefined
-                    }
-                  />
-                  {isExpanded
-                    ? replies.length > 0
-                      ? replies.map((reply) => (
-                          <CommentItem
-                            key={reply.id}
-                            comment={reply}
-                            issueId={issueId}
-                            currentUserId={currentUserId}
-                            parentAuthorName={comment.user.displayName ?? null}
-                            onReply={onReply}
-                            onStartEdit={onStartEdit}
-                            isEditing={editingCommentId === reply.id}
-                            editText={editingCommentId === reply.id ? editText : ''}
-                            onEditTextChange={onEditTextChange}
-                            onEditSave={onEditSave}
-                            onEditCancel={onEditCancel}
-                            isReply
-                          />
-                        ))
-                      : hasNextPage
-                        ? (
-                          <Pressable
-                            onPress={handleLoadMore}
-                            disabled={isFetchingNextPage}
-                            style={{ marginLeft: Spacing['2xl'] }}
-                            hitSlop={8}
-                            accessibilityRole="button"
-                          >
-                            {isFetchingNextPage ? (
-                              <ActivityIndicator size="small" />
-                            ) : (
-                              <ThemedText type="link" style={{ color: accent }}>
-                                {Localization.comments.loadMore}
-                              </ThemedText>
-                            )}
-                          </Pressable>
-                        )
-                        : null
-                    : null}
-                </View>
-              );
-            });
-          })()}
+          })}
           {hasNextPage ? (
             <Pressable
               onPress={handleLoadMore}

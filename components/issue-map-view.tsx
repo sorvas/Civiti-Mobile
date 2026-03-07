@@ -66,6 +66,7 @@ export function IssueMapView({ issues, onIssuePress }: IssueMapViewProps) {
         provider={PROVIDER_DEFAULT}
         initialRegion={INITIAL_REGION}
         onPress={handleMapPress}
+        onClusterPress={handleMapPress}
         clusterColor={BrandColors.orangeWeb}
         clusterTextColor={BrandColors.oxfordBlue}
         clusterFontFamily={Fonts.bold}
