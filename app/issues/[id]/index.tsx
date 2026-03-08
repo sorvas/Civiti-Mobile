@@ -336,7 +336,14 @@ function CommentsSection({
                           )}
                         </Pressable>
                       )
-                      : null
+                      : (
+                        <ThemedText
+                          type="caption"
+                          style={{ color: textSecondary, marginLeft: Spacing['2xl'] }}
+                        >
+                          {Localization.states.emptyComments}
+                        </ThemedText>
+                      )
                   : null}
               </View>
             );
