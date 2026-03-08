@@ -175,6 +175,7 @@ export const Localization = {
     deleteConfirmYes: 'Da, șterge',
     editSave: 'Salvează',
     editCancel: 'Anulează',
+    repliesUnavailable: 'Răspunsurile nu sunt disponibile momentan',
   },
 
   // Activity feed

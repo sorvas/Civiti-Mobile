@@ -318,30 +318,12 @@ function CommentsSection({
                           isReply
                         />
                       ))
-                    : hasNextPage
-                      ? (
-                        <Pressable
-                          onPress={handleLoadMore}
-                          disabled={isFetchingNextPage}
-                          style={{ marginLeft: Spacing['2xl'] }}
-                          hitSlop={8}
-                          accessibilityRole="button"
-                        >
-                          {isFetchingNextPage ? (
-                            <ActivityIndicator size="small" />
-                          ) : (
-                            <ThemedText type="link" style={{ color: accent }}>
-                              {Localization.comments.loadMore}
-                            </ThemedText>
-                          )}
-                        </Pressable>
-                      )
-                      : (
+                    : (
                         <ThemedText
                           type="caption"
                           style={{ color: textSecondary, marginLeft: Spacing['2xl'] }}
                         >
-                          {Localization.states.emptyComments}
+                          {Localization.comments.repliesUnavailable}
                         </ThemedText>
                       )
                   : null}
