@@ -303,7 +303,7 @@ function CommentsSection({
                   onEditSave={onEditSave}
                   onEditCancel={onEditCancel}
                   repliesExpanded={isExpanded}
-                  replyCountOverride={Math.max(replies.length, comment.replyCount)}
+                  replyCountOverride={comment.replyCount}
                   onToggleReplies={
                     replies.length > 0 || comment.replyCount > 0
                       ? onToggleThread
