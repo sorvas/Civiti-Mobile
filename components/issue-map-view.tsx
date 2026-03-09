@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import ClusteredMapView from 'react-native-map-clustering';
-import { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { Marker, type MapPressEvent, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { IssueMiniCard } from '@/components/issue-mini-card';
 import { ThemedText } from '@/components/themed-text';
@@ -47,8 +47,13 @@ export function IssueMapView({ issues, onIssuePress }: IssueMapViewProps) {
     [],
   );
 
-  const handleMapPress = useCallback(() => {
-    setSelectedIssue(null);
+  const handleMapPress = useCallback((e: MapPressEvent) => {
+    // On Android, Marker.onPress bubbles up to MapView.onPress with
+    // action === 'marker-press'. Guard against that so the mini card
+    // isn't immediately dismissed after a marker tap.
+    if (e.nativeEvent.action !== 'marker-press') {
+      setSelectedIssue(null);
+    }
   }, []);
 
   const handleClusterPress = useCallback(
