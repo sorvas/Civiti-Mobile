@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import ClusteredMapView from 'react-native-map-clustering';
 import { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
@@ -110,8 +110,8 @@ export function IssueMapView({ issues, onIssuePress }: IssueMapViewProps) {
   );
 }
 
-// Extracted to avoid re-creating press handlers on every parent render
-function IssueMarker({
+// Memoized to skip reconciliation when selectedIssue changes but markers don't
+const IssueMarker = React.memo(function IssueMarker({
   issue,
   onPress,
 }: {
@@ -131,7 +131,7 @@ function IssueMarker({
       onPress={handlePress}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
